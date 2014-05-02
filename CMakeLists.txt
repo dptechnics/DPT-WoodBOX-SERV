@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-PROJECT(uhttpd C)
+PROJECT(woodbox-server C)
 
 INCLUDE (CheckFunctionExists)
 
@@ -32,8 +32,8 @@ IF(HAVE_SHADOW)
     ADD_DEFINITIONS(-DHAVE_SHADOW)
 ENDIF()
 
-ADD_EXECUTABLE(uhttpd ${SOURCES})
-TARGET_LINK_LIBRARIES(uhttpd ubox dl ${LIBS})
+ADD_EXECUTABLE(woodbox-server ${SOURCES})
+TARGET_LINK_LIBRARIES(woodbox-server ubox dl ${LIBS})
 
 SET(PLUGINS "")
 IF(LUA_SUPPORT)
