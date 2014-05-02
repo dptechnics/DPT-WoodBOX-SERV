@@ -21,7 +21,7 @@ IF(LIBS STREQUAL "LIBS-NOTFOUND")
 	SET(LIBS "")
 ENDIF()
 
-SET(SOURCES main.c listen.c client.c utils.c file.c auth.c cgi.c relay.c proc.c plugin.c)
+SET(SOURCES main.c listen.c client.c utils.c file.c auth.c cgi.c relay.c proc.c plugin.c api.c)
 IF(TLS_SUPPORT)
 	SET(SOURCES ${SOURCES} tls.c)
 	ADD_DEFINITIONS(-DHAVE_TLS)
