@@ -31,6 +31,7 @@
 
 #include "uhttpd.h"
 #include "mimetypes.h"
+#include "api.h"
 
 static LIST_HEAD(index_files);
 static LIST_HEAD(dispatch_handlers);
