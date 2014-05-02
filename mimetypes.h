@@ -29,6 +29,7 @@ static const struct mimetype uh_mime_types[] = {
 	{ "txt",     "text/plain" },
 	{ "log",     "text/plain" },
 	{ "js",      "text/javascript" },
+	{ "json",	 "application/json" },
 	{ "css",     "text/css" },
 	{ "htm",     "text/html" },
 	{ "html",    "text/html" },
