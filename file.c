@@ -146,7 +146,7 @@ uh_path_lookup(struct client *cl, const char *url)
 		return NULL;
 		
 	/* Print out URL */
-	printf("Requested URL: %s", url);
+	printf("Requested URL: %s\n\r", url);
 
 	memset(&p, 0, sizeof(p));
 	path_phys[0] = 0;
