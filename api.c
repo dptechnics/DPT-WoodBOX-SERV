@@ -14,30 +14,29 @@ char *response = "{\"app\" : \"DPT WoodBOX\"}";
 
 static void write_response(struct client *cl)
 {
-	int r, copied = 0;
-	int reslen = strlen(response);
+	int r;							/* The number of bytes to copy */
+	int copied = 0;					/* The previous number of bytes copied */
+	int reslen = strlen(response);	/* The total length of the body */
+	int buffsize = sizeof(uh_buf)	/* Size of the response buffer */
 
 	while (cl->us->w.data_bytes < 256) {
-		// Determine lenght to copy from the response buffer
-		if(sizeof(uh_buf) < reslen - copied) {
-			r = sizeof(uh_buf);
-		} else {
-			r = reslen - copied;
+		// Determine length to copy from the response buffer
+		r = reslen - copied;
+		if(buffsize < r) {
+			r = buffsize;
 		}
 		
-		/* Copy string to buffer */
-		strncpy(uh_buf, response, r);
-		
-		/* Check if all data is written */
+		/* Request is done when all data is written */
 		if (!r) {
 			uh_request_done(cl);
 			return;
 		}
+		
+		/* Copy string to buffer */
+		/* strncpy(uh_buf, response, r); */
 
-		uh_chunk_write(cl, uh_buf, r);
+		uh_chunk_write(cl, response+copied, r);
 		copied = r;
-		printf("Writing %i bytes", r);
-		printf("Writing %i bytes", r);
 	}
 }
 
