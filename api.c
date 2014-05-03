@@ -55,7 +55,7 @@ bool handle_request(struct client *cl, char *url) {
 	/* send body */
 	if (cl->request.method == UH_HTTP_MSG_HEAD) {
 		uh_request_done(cl);
-		return;
+		return true;
 	}
 
 	cl->dispatch.write_cb = write_response;
