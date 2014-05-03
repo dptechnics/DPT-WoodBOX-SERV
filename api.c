@@ -35,6 +35,7 @@ static void write_response(struct client *cl)
 		}
 
 		uh_chunk_write(cl, uh_buf, r);
+		copied = r;
 		printf("Writing %i bytes", r);
 		printf("Writing %i bytes", r);
 	}
