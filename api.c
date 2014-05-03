@@ -17,7 +17,7 @@ static void write_response(struct client *cl)
 	int r;							/* The number of bytes to copy */
 	int copied = 0;					/* The previous number of bytes copied */
 	int reslen = strlen(response);	/* The total length of the body */
-	int buffsize = sizeof(uh_buf)	/* Size of the response buffer */
+	int buffsize = sizeof(uh_buf);	/* Size of the response buffer */
 
 	while (cl->us->w.data_bytes < 256) {
 		// Determine length to copy from the response buffer
