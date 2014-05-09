@@ -640,6 +640,7 @@ void uh_dispatch_add(struct dispatch_handler *d)
 static struct dispatch_handler *
 dispatch_find(const char *url, struct path_info *pi)
 {
+    printf("Dit is een test\r\n");
 	struct dispatch_handler *d;
 
 	list_for_each_entry(d, &dispatch_handlers, list) {
@@ -789,7 +790,8 @@ static bool __handle_file_request(struct client *cl, char *url)
 
 	if (!uh_auth_check(cl, pi))
 		return true;
-
+        
+        
 	d = dispatch_find(url, pi);
 	if (d)
 		uh_invoke_handler(cl, d, url, pi);
