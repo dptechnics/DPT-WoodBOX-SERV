@@ -162,9 +162,6 @@ static int client_parse_request(struct client *cl, char *data)
 	struct http_request *req = &cl->request;
 	char *type, *path, *version;
 	int h_method, h_version;
-        
-        /* CHANGEND CHANGED CHANGEND */
-        printf("Data: %s\r\n", data);
 
 	type = strtok(data, " ");
 	path = strtok(NULL, " ");
@@ -449,6 +446,7 @@ void uh_client_read_cb(struct client *cl)
 	client_done = false;
 	do {
 		str = ustream_get_read_buf(us, &len);
+                printf("%s\r\n", str);
 		if (!str || !len)
 			break;
 
