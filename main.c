@@ -105,10 +105,8 @@ bool load_configuration(void)
 	conf.docroot = "/www";
 
 	/* Bind a non TLS socket to port 80 */
-	if(uh_socket_bind(NULL, "80", false)) {
-		fprintf(stderr, "[ERROR] Could not bind socket to 0.0.0.0:80\n");
-		return false;
-	}
+	uh_socket_bind(NULL, "80", false)
+
 
 	/* Make 'index.html' the default document */
 	uh_index_add("index.html");
