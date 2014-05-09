@@ -16,8 +16,8 @@ char *response = "{\"app\" : \"DPT WoodBOX\"}";
 
 static void write_response(struct client *cl)
 {
-	int r;							/* The number of bytes to copy */
-	int copied = 0;					/* The previous number of bytes copied */
+	int r;				/* The number of bytes to copy */
+	int copied = 0;			/* The previous number of bytes copied */
 	int reslen = strlen(response);	/* The total length of the body */
 	int buffsize = sizeof(uh_buf);	/* Size of the response buffer */
 
@@ -53,6 +53,8 @@ bool handle_request(struct client *cl, char *url) {
         } else {
             printf("POST\r\n");
         }
+        
+        printf("Header size: %d", cl->hdr.buflen);
 #endif
 	
         /* Parse the request string */

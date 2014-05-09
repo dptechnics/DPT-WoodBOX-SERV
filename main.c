@@ -45,9 +45,14 @@ char uh_buf[4096];
  */
 static int run_server(void)
 {
+        /* Initialize uloop event loop */
 	uloop_init();
+        
+        /* Set up event loop clients */
 	uh_setup_listeners();
 	uh_plugin_post_init();
+        
+        /* Start the event loop and listen to requests */
 	uloop_run();
 
 	return 0;
