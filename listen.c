@@ -1,29 +1,26 @@
 /*
- * uhttpd - Tiny single-threaded httpd
+ * WoodBOX-server
  *
- *   Copyright (C) 2010-2013 Jo-Philipp Wich <xm@subsignal.org>
- *   Copyright (C) 2013 Felix Fietkau <nbd@openwrt.org>
+ * Server appliction for the DPTechnics WoodBOX.
  *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
+ * File: listen.c
+ * Description: the listener socket functionality
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Created by: Daan Pape
+ * Created on: May 9, 2014
  */
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
+#include <stdbool.h>
 
 #include "uhttpd.h"
 
+/**
+ * Listener structure
+ */
 struct listener {
 	struct list_head list;
 	struct uloop_fd fd;
@@ -126,7 +123,14 @@ void uh_setup_listeners(void)
 	}
 }
 
-int uh_socket_bind(const char *host, const char *port, bool tls)
+
+/**
+ * Bind a socket to listen from request on a given host on a given host.
+ * @host the host to bind the socket to, NULL for any host
+ * @port the port to listen to
+ * @tls true if this socket sould listen for TLS connections
+ */
+bool bind_listener_socket(const char *host, const char *port, bool tls)
 {
 	int sock = -1;
 	int yes = 1;
@@ -142,7 +146,7 @@ int uh_socket_bind(const char *host, const char *port, bool tls)
 
 	if ((status = getaddrinfo(host, port, &hints, &addrs)) != 0) {
 		fprintf(stderr, "getaddrinfo(): %s\n", gai_strerror(status));
-		return 0;
+		return false;
 	}
 
 	/* try to bind a new socket to each found address */
@@ -195,9 +199,10 @@ int uh_socket_bind(const char *host, const char *port, bool tls)
 error:
 		if (sock > -1)
 			close(sock);
+		return false;
 	}
 
 	freeaddrinfo(addrs);
 
-	return bound;
+	return true;
 }
