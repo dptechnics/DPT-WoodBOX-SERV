@@ -44,9 +44,17 @@ static void free_response(struct client *cl)
 
 bool handle_request(struct client *cl, char *url) {
 #ifdef DEBUG
-	printf("handling request: %s\r\n", url);
+	printf("Handling request: %s\r\n", url);
+        printf("Request method: ");
+        if(cl->request->method == UH_HTTP_MSG_GET){
+            printf("GET\r\n");
+        } else {
+            printf("POST\r\n");
+        }
 #endif
 	
+        /* Parse the request string */
+        
 	
 	/* write status */
 	uh_http_header(cl, 200, "OK");
