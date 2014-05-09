@@ -211,7 +211,7 @@ int main(int argc, char **argv)
 {
 	bool nofork = false;
 	char *port;
-	int opt, ch;
+	int ch;
 	int cur_fd;
 	int bound = 0;
 
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
 	init_defaults_pre();
 	signal(SIGPIPE, SIG_IGN);
 
-	while ((ch = getopt(argc, argv, "afSDRC:K:E:I:p:s:h:c:l:L:d:r:m:n:N:x:i:t:k:T:A:u:U:")) != -1) {
+	while ((ch = getopt(argc, argv, "afSDRC:K:E:I:p:s:h:c:d:r:m:n:N:x:i:t:k:T:A:u:U:")) != -1) {
 		switch(ch) {
 #ifdef HAVE_TLS
 		case 'C':
@@ -375,21 +375,6 @@ int main(int argc, char **argv)
 			conf.file = optarg;
 			break;
 
-#ifdef HAVE_LUA
-		case 'l':
-			conf.lua_prefix = optarg;
-			break;
-
-		case 'L':
-			conf.lua_handler = optarg;
-			break;
-#else
-		case 'l':
-		case 'L':
-			fprintf(stderr, "uhttpd: Lua support not compiled, "
-			                "ignoring -%c\n", opt);
-			break;
-#endif
 #ifdef HAVE_UBUS
 		case 'a':
 			conf.ubus_noauth = 1;
@@ -445,16 +430,6 @@ int main(int argc, char **argv)
 	}
 #endif
 
-#ifdef HAVE_LUA
-	if (conf.lua_handler || conf.lua_prefix) {
-		if (!conf.lua_handler || !conf.lua_prefix) {
-			fprintf(stderr, "Need handler and prefix to enable Lua support\n");
-			return 1;
-		}
-		if (uh_plugin_init("uhttpd_lua.so"))
-			return 1;
-	}
-#endif
 #ifdef HAVE_UBUS
 	if (conf.ubus_prefix && uh_plugin_init("uhttpd_ubus.so"))
 		return 1;
