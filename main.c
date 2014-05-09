@@ -324,7 +324,7 @@ int main(int argc, char **argv)
 			break;
 #endif
 		default:
-			return usage(argv[0]);
+			return usage();
 		}
 	}
         
