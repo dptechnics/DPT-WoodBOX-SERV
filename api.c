@@ -46,7 +46,8 @@ static void free_response(struct client *cl)
 
 bool handle_request(struct client *cl, char *url) {
 #ifdef DEBUG
-    char* str;
+	char *str;
+	int len;
     
     printf("Handling request: %s\r\n", url);
     printf("Request method: ");
