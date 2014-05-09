@@ -162,6 +162,9 @@ static int client_parse_request(struct client *cl, char *data)
 	struct http_request *req = &cl->request;
 	char *type, *path, *version;
 	int h_method, h_version;
+        
+        /* CHANGEND CHANGED CHANGEND */
+        printf("Data: %s\r\n", data);
 
 	type = strtok(data, " ");
 	path = strtok(NULL, " ");

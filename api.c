@@ -54,15 +54,7 @@ bool handle_request(struct client *cl, char *url) {
             printf("GET\r\n");
         } else {
             printf("POST\r\n");
-        }
-        
-        
-        printf("Header: ");
-        for(i = 0; i < cl->hdr.buflen; ++i) {
-            printf("%d", ((char*)cl->hdr.buf)[i]);
-        }
-        printf("\r\n");
-       
+        }       
 #endif
 	
         /* Parse the request string */
