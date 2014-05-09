@@ -637,12 +637,12 @@ void uh_dispatch_add(struct dispatch_handler *d)
 	list_add_tail(&d->list, &dispatch_handlers);
 }
 
-static struct dispatch_handler *
-dispatch_find(const char *url, struct path_info *pi)
+static struct dispatch_handler *dispatch_find(const char *url, struct path_info *pi)
 {
 	struct dispatch_handler *d;
 
 	list_for_each_entry(d, &dispatch_handlers, list) {
+            printf("Listing for entry: %s", url);
 		if (pi) {
 			if (d->check_url)
 				continue;
@@ -657,7 +657,7 @@ dispatch_find(const char *url, struct path_info *pi)
 				return d;
 		}
 	}
-
+        
 	return NULL;
 }
 
@@ -792,7 +792,7 @@ static bool __handle_file_request(struct client *cl, char *url)
         
         
 	d = dispatch_find(url, pi);
-        printf("Raken we hier?\r\n");
+        
 	if (d)
 		uh_invoke_handler(cl, d, url, pi);
 	else
