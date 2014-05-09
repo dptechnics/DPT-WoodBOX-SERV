@@ -8,13 +8,13 @@
  * woodbox server program.
  *
  * Created by: Daan Pape
- * Created on: 09/05/2014
+ * Created on: May 9, 2014
  */
 
 #include <stdlib.h>
 
-#ifndef MIMETYPES_H
-#define MIMETYPES_H
+#ifndef MIMETYPES_H_
+#define MIMETYPES_H_
 
 /**
  * Mimetype struct mapping a file extension to the corresponding
