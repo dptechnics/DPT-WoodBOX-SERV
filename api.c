@@ -48,7 +48,7 @@ bool handle_request(struct client *cl, char *url) {
 #ifdef DEBUG
 	printf("Handling request: %s\r\n", url);
         printf("Request method: ");
-        if(cl->request->method == UH_HTTP_MSG_GET){
+        if(cl->request.method == UH_HTTP_MSG_GET){
             printf("GET\r\n");
         } else {
             printf("POST\r\n");
