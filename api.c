@@ -54,7 +54,7 @@ bool handle_request(struct client *cl, char *url) {
         printf("GET\r\n");
     } else {
         printf("POST\r\n");
-        str = ustream_get_read_buf(us, &len);
+        str = ustream_get_read_buf(cl->us, &len);
         }       
 #endif
 	
