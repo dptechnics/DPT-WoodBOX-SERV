@@ -23,16 +23,19 @@
  * Listener structure
  */
 struct listener {
-	struct list_head list;
-	struct uloop_fd fd;
-	int socket;
-	int n_clients;
-	struct sockaddr_in6 addr;
-	bool tls;
-	bool blocked;
+	struct list_head list;		/* The listener list */
+	struct uloop_fd fd;			/* Event loop information */
+	int socket;					/* The socket */
+	int n_clients;				/* The number of clients */
+	struct sockaddr_in6 addr;	/* The IPv6 socket address */
+	bool tls;					/* Flag for SSL support */
+	bool blocked;				/* True if this listener is blocked */
 };
 
+/* The list of listeners */
 static LIST_HEAD(listeners);
+
+/* The number of blocked clients */
 static int n_blocked;
 
 void uh_close_listen_fds(void)
@@ -43,12 +46,6 @@ void uh_close_listen_fds(void)
 		close(l->fd.fd);
 }
 
-static void uh_block_listener(struct listener *l)
-{
-	uloop_fd_delete(&l->fd);
-	n_blocked++;
-	l->blocked = true;
-}
 
 static void uh_poll_listeners(struct uloop_timeout *timeout)
 {
@@ -81,30 +78,43 @@ void uh_unblock_listeners(void)
 	uloop_timeout_set(&poll_timer, 1);
 }
 
-static void listener_cb(struct uloop_fd *fd, unsigned int events)
+/**
+ * This function handles new connections
+ */
+static void new_client_event(struct uloop_fd *fd, unsigned int events)
 {
+	/* Get the listener that raised the event */
 	struct listener *l = container_of(fd, struct listener, fd);
 
+	/* Accept all clients */
 	while (1) {
 		if (!uh_accept_client(fd->fd, l->tls))
 			break;
 	}
 
-	if (conf.max_connections && n_clients >= conf.max_connections)
-		uh_block_listener(l);
+	/* Block a client when there are to many connections */
+	if (conf.max_connections && n_clients >= conf.max_connections) {
+		uloop_fd_delete(&l->fd);
+		n_blocked++;
+		l->blocked = true;
+	}
 }
 
-void uh_setup_listeners(void)
+/**
+ * Setup all listeners in the listener list and
+ * bind them to the uloop event system
+ */
+void setup_listeners(void)
 {
 	struct listener *l;
 	int yes = 1;
 
+	/* For all listeners in the list */
 	list_for_each_entry(l, &listeners, list) {
 		int sock = l->fd.fd;
 
-		/* TCP keep-alive */
+		/* Set up TCP Keep Alive for Linux */
 		if (conf.tcp_keepalive > 0) {
-#ifdef linux
 			int tcp_ka_idl, tcp_ka_int, tcp_ka_cnt;
 
 			tcp_ka_idl = 1;
@@ -114,12 +124,11 @@ void uh_setup_listeners(void)
 			setsockopt(sock, SOL_TCP, TCP_KEEPIDLE,  &tcp_ka_idl, sizeof(tcp_ka_idl));
 			setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, &tcp_ka_int, sizeof(tcp_ka_int));
 			setsockopt(sock, SOL_TCP, TCP_KEEPCNT,   &tcp_ka_cnt, sizeof(tcp_ka_cnt));
-#endif
-
 			setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(yes));
 		}
 
-		l->fd.cb = listener_cb;
+		/* Register this listener with the uloop event loop and register READ events */
+		l->fd.cb = new_client_event;
 		uloop_fd_add(&l->fd, ULOOP_READ);
 	}
 }
@@ -131,26 +140,31 @@ void uh_setup_listeners(void)
  * @port the port to listen to
  * @tls true if this socket sould listen for TLS connections
  */
-bool bind_listener_socket(const char *host, const char *port, bool tls)
+bool bind_listener_sockets(const char *host, const char *port, bool tls)
 {
 	int sock = -1;
 	int yes = 1;
 	int status;
-	int bound = 0;
+
 	struct listener *l = NULL;
 	struct addrinfo *addrs = NULL, *p = NULL;
+
+	/*
+	 * Create POSIX hints for the address
+	 */
 	static struct addrinfo hints = {
-		.ai_family = AF_UNSPEC,
-		.ai_socktype = SOCK_STREAM,
-		.ai_flags = AI_PASSIVE,
+		.ai_family = AF_UNSPEC,			/* The adress family is unspecified */
+		.ai_socktype = SOCK_STREAM,		/* This is a TCP socket */
+		.ai_flags = AI_PASSIVE,			/* The socket address will be used in a call to the bind function */
 	};
 
+	/* Translate the host and port into a set of socket addresses*/
 	if ((status = getaddrinfo(host, port, &hints, &addrs)) != 0) {
 		fprintf(stderr, "getaddrinfo(): %s\n", gai_strerror(status));
 		return false;
 	}
 
-	/* try to bind a new socket to each found address */
+	/* Try to bind a socket to each address returned from the translation*/
 	for (p = addrs; p; p = p->ai_next) {
 		/* get the socket */
 		sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
@@ -186,14 +200,15 @@ bool bind_listener_socket(const char *host, const char *port, bool tls)
 
 		fd_cloexec(sock);
 
+
 		l = calloc(1, sizeof(*l));
-		if (!l)
+		if (!l) {
 			goto error;
+		}
 
 		l->fd.fd = sock;
 		l->tls = tls;
 		list_add_tail(&l->list, &listeners);
-		bound++;
 
 		continue;
 
