@@ -778,7 +778,6 @@ static bool __handle_file_request(struct client *cl, char *url)
 	pi = uh_path_lookup(cl, url);
 	if (!pi) {
 		/* Handle a file not in the webroot */
-		printf("Requested URL: %s\n\r", url);
 		return handle_request(cl, url);
 	}
 	if (pi->redirected)

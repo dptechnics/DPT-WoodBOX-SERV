@@ -10,6 +10,8 @@
 #include "mimetypes.h"
 #include "api.h"
 
+#define DEBUG
+
 char *response = "{\"app\" : \"DPT WoodBOX\"}";	
 
 static void write_response(struct client *cl)
