@@ -31,9 +31,6 @@ static void write_response(struct client *cl)
 			uh_request_done(cl);
 			return;
 		}
-		
-		/* Copy string to buffer */
-		/* strncpy(uh_buf, response, r); */
 
 		uh_chunk_write(cl, response+copied, r);
 		copied = r;
@@ -46,7 +43,10 @@ static void free_response(struct client *cl)
 }
 
 bool handle_request(struct client *cl, char *url) {
-	printf("handling request: %s", url);
+#ifdef DEBUG
+	printf("handling request: %s\r\n", url);
+#endif
+	
 	
 	/* write status */
 	uh_http_header(cl, 200, "OK");
