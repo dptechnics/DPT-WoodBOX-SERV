@@ -336,8 +336,6 @@ void client_poll_post_data(struct client *cl)
 	struct http_request *r = &cl->request;
 	char *buf;
 	int len;
-        
-        printf("parsing post data\r\n");
 
 	if (cl->state == CLIENT_STATE_DONE)
 		return;
@@ -455,7 +453,8 @@ void uh_client_read_cb(struct client *cl)
 			break;
 
 		if (!read_cbs[cl->state](cl, str, len)) {
-			if (len == us->r.buffer_len && cl->state != CLIENT_STATE_DATA)
+			if (len == us->r.buffer_len &&
+			    cl->state != CLIENT_STATE_DATA)
 				uh_header_error(cl, 413, "Request Entity Too Large");
 			break;
 		}
