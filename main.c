@@ -47,20 +47,6 @@ int main(int argc, char **argv)
 	/* Prevent SIGPIPE errors */
 	signal(SIGPIPE, SIG_IGN);
 
-
-#ifdef HAVE_TLS
-	if (n_tls) {
-		if (!tls_crt || !tls_key) {
-			fprintf(stderr, "Please specify a certificate and "
-					"a key file to enable SSL support\n");
-			return 1;
-		}
-
-		if (uh_tls_init(tls_key, tls_crt))
-		    return 1;
-	}
-#endif
-
 	/* fork (if not disabled) */
 	if (FORK_ON_START) {
 		switch (fork()) {
