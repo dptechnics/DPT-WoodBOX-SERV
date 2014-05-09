@@ -12,7 +12,7 @@
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
  * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER INint a AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
 	init_defaults_pre();
 	signal(SIGPIPE, SIG_IGN);
 
-	while ((ch = getopt(argc, argv, "afSDRC:K:E:I:p:s:h:c:d:r:m:n:N:x:i:t:k:T:A:u:U:")) != -1) {
+	while ((ch = getopt(argc, argv, "afSDRC:K:E:I:p:s:h:c:r:m:n:N:x:i:t:k:T:A:u:U:")) != -1) {
 		switch(ch) {
 #ifdef HAVE_TLS
 		case 'C':
@@ -336,27 +336,6 @@ int main(int argc, char **argv)
 
 		case 'f':
 			nofork = 1;
-			break;
-
-		case 'd':
-			optarg = strdup(optarg);
-			port = alloca(strlen(optarg) + 1);
-			if (!port)
-				return -1;
-
-			/* "decode" plus to space to retain compat */
-			for (opt = 0; optarg[opt]; opt++)
-				if (optarg[opt] == '+')
-					optarg[opt] = ' ';
-
-			/* opt now contains strlen(optarg) -- no need to re-scan */
-			if (uh_urldecode(port, opt, optarg, opt) < 0) {
-				fprintf(stderr, "uhttpd: invalid encoding\n");
-				return -1;
-			}
-
-			printf("%s", port);
-			return 0;
 			break;
 
 		/* basic auth realm */
