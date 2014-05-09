@@ -104,7 +104,7 @@ bool load_configuration(void)
 	conf.docroot = "/www";
 
 	/* Bind a non TLS socket to port 80 */
-	if(bind_listener_socket(NULL, "80", false)) {
+	if(!bind_listener_socket(NULL, "80", false)) {
 		fprintf(stderr, "[ERROR] Could not bind socket to 0.0.0.0:80\n");
 		return false;
 	}
