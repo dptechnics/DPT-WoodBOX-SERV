@@ -31,7 +31,6 @@
 
 #include "uhttpd.h"
 #include "mimetypes.h"
-#include "api.h"
 
 static LIST_HEAD(index_files);
 static LIST_HEAD(dispatch_handlers);
@@ -637,12 +636,12 @@ void uh_dispatch_add(struct dispatch_handler *d)
 	list_add_tail(&d->list, &dispatch_handlers);
 }
 
-static struct dispatch_handler *dispatch_find(const char *url, struct path_info *pi)
+static struct dispatch_handler *
+dispatch_find(const char *url, struct path_info *pi)
 {
 	struct dispatch_handler *d;
 
 	list_for_each_entry(d, &dispatch_handlers, list) {
-            printf("Listing for entry: %s", url);
 		if (pi) {
 			if (d->check_url)
 				continue;
@@ -657,7 +656,7 @@ static struct dispatch_handler *dispatch_find(const char *url, struct path_info 
 				return d;
 		}
 	}
-        
+
 	return NULL;
 }
 
@@ -776,10 +775,9 @@ static bool __handle_file_request(struct client *cl, char *url)
 	struct path_info *pi;
 
 	pi = uh_path_lookup(cl, url);
-	if (!pi) {
-		/* Handle a file not in the webroot */
-		return handle_request(cl, url);
-	}
+	if (!pi)
+		return false;
+
 	if (pi->redirected)
 		return true;
 
@@ -789,10 +787,8 @@ static bool __handle_file_request(struct client *cl, char *url)
 
 	if (!uh_auth_check(cl, pi))
 		return true;
-        
-        
+
 	d = dispatch_find(url, pi);
-        
 	if (d)
 		uh_invoke_handler(cl, d, url, pi);
 	else

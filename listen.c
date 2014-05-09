@@ -96,10 +96,6 @@ static void listener_cb(struct uloop_fd *fd, unsigned int events)
 		uh_block_listener(l);
 }
 
-/*
- * Set up listening sockets to wake up the event look
- * on read events. 
- */
 void uh_setup_listeners(void)
 {
 	struct listener *l;

@@ -34,33 +34,18 @@
 #include "uhttpd.h"
 #include "tls.h"
 
-/**
- * The server write and receive buffer
- */
 char uh_buf[4096];
 
-/**
- * Start the woodbox server loop
- * @return exit succes
- */
 static int run_server(void)
 {
-        /* Initialize uloop event loop */
 	uloop_init();
-        
-        /* Set up event loop clients */
 	uh_setup_listeners();
 	uh_plugin_post_init();
-        
-        /* Start the event loop and listen to requests */
 	uloop_run();
 
 	return 0;
 }
 
-/**
- * Parse configuration file 
- */
 static void uh_config_parse(void)
 {
 	const char *path = conf.file;
@@ -70,10 +55,8 @@ static void uh_config_parse(void)
 	char *col2;
 	char *eol;
 
-        /* Specify default path */
-	if (!path) {
-                path = "/etc/config/woodbox-server";
-        }
+	if (!path)
+		path = "/etc/httpd.conf";
 
 	c = fopen(path, "r");
 	if (!c)
@@ -140,15 +123,10 @@ static int add_listener_arg(char *arg, bool tls)
 	return uh_socket_bind(host, port, tls);
 }
 
-/**
- * Print command line usage to stdout
- * @return usage is only printed when wrong cli parameters
- * where passed to the server, so exit status 1.
- */
-static int usage(void)
+static int usage(const char *name)
 {
 	fprintf(stderr,
-		"Usage: woodbox-server -p [addr:]port -h docroot\n"
+		"Usage: %s -p [addr:]port -h docroot\n"
 		"	-f              Do not fork to background\n"
 		"	-c file         Configuration file, default is '/etc/httpd.conf'\n"
 		"	-p [addr:]port  Bind to specified address and port, multiple allowed\n"
@@ -165,23 +143,75 @@ static int usage(void)
 		"	-R              Enable RFC1918 filter\n"
 		"	-n count        Maximum allowed number of concurrent script requests\n"
 		"	-N count        Maximum allowed number of concurrent connections\n"
+#ifdef HAVE_LUA
+		"	-l string       URL prefix for Lua handler, default is '/lua'\n"
+		"	-L file         Lua handler script, omit to disable Lua\n"
+#endif
 #ifdef HAVE_UBUS
 		"	-u string       URL prefix for UBUS via JSON-RPC handler\n"
 		"	-U file         Override ubus socket path\n"
 		"	-a              Do not authenticate JSON-RPC requests against UBUS session api\n"
 #endif
+		"	-x string       URL prefix for CGI handler, default is '/cgi-bin'\n"
+		"	-i .ext=path    Use interpreter at path for files with the given extension\n"
 		"	-t seconds      CGI, Lua and UBUS script timeout in seconds, default is 60\n"
 		"	-T seconds      Network timeout in seconds, default is 30\n"
 		"	-k seconds      HTTP keepalive timeout\n"
+		"	-d string       URL decode given string\n"
 		"	-r string       Specify basic auth realm\n"
-		"\n");
+		"	-m string       MD5 crypt given string\n"
+		"\n", name
+	);
 	return 1;
+}
+
+static void init_defaults_pre(void)
+{
+	conf.script_timeout = 60;
+	conf.network_timeout = 30;
+	conf.http_keepalive = 20;
+	conf.max_script_requests = 3;
+	conf.max_connections = 100;
+	conf.realm = "Protected Area";
+	conf.cgi_prefix = "/cgi-bin";
+	conf.cgi_path = "/sbin:/usr/sbin:/bin:/usr/bin";
+}
+
+static void init_defaults_post(void)
+{
+	uh_index_add("index.html");
+	uh_index_add("index.htm");
+	uh_index_add("default.html");
+	uh_index_add("default.htm");
+
+	if (conf.cgi_prefix) {
+		char *str = malloc(strlen(conf.docroot) + strlen(conf.cgi_prefix) + 1);
+		strcpy(str, conf.docroot);
+		strcat(str, conf.cgi_prefix);
+		conf.cgi_docroot_path = str;
+	};
+}
+
+static void fixup_prefix(char *str)
+{
+	int len;
+
+	if (!str || !str[0])
+		return;
+
+	len = strlen(str) - 1;
+
+	while (len >= 0 && str[len] == '/')
+		len--;
+
+	str[len + 1] = 0;
 }
 
 int main(int argc, char **argv)
 {
 	bool nofork = false;
-	int ch;
+	char *port;
+	int opt, ch;
 	int cur_fd;
 	int bound = 0;
 
@@ -189,25 +219,14 @@ int main(int argc, char **argv)
 	int n_tls = 0;
 	const char *tls_key = NULL, *tls_crt = NULL;
 #endif
-        /* Throw compilation error when buffer is large than max path size */
+
 	BUILD_BUG_ON(sizeof(uh_buf) < PATH_MAX);
-        
+
 	uh_dispatch_add(&cgi_dispatch);
-        
-        /* Ignore SIGPIPE's */
+	init_defaults_pre();
 	signal(SIGPIPE, SIG_IGN);
-        
-        /* Read server configuration */
-	conf.script_timeout = 60;
-	conf.network_timeout = 30;
-	conf.http_keepalive = 20;
-	conf.max_script_requests = 3;
-	conf.max_connections = 100;
-	conf.realm = "Protected Area";
-	conf.cgi_prefix = "/api";
-	conf.cgi_path = "/sbin:/usr/sbin:/bin:/usr/bin";
-        
-        while ((ch = getopt(argc, argv, "afSDRC:K:E:I:p:s:h:c:r:m:n:N:x:i:t:k:T:A:u:U:")) != -1) {
+
+	while ((ch = getopt(argc, argv, "afSDRC:K:E:I:p:s:h:c:l:L:d:r:m:n:N:x:i:t:k:T:A:u:U:")) != -1) {
 		switch(ch) {
 #ifdef HAVE_TLS
 		case 'C':
@@ -225,7 +244,7 @@ int main(int argc, char **argv)
 		case 'C':
 		case 'K':
 		case 's':
-			fprintf(stderr, "woodbox-server: TLS support not compiled, "
+			fprintf(stderr, "uhttpd: TLS support not compiled, "
 			                "ignoring -%c\n", opt);
 			break;
 #endif
@@ -236,7 +255,8 @@ int main(int argc, char **argv)
 
 		case 'h':
 			if (!realpath(optarg, uh_buf)) {
-				fprintf(stderr, "Error: Invalid directory %s: %s\n", optarg, strerror(errno));
+				fprintf(stderr, "Error: Invalid directory %s: %s\n",
+						optarg, strerror(errno));
 				exit(1);
 			}
 			conf.docroot = strdup(uh_buf);
@@ -244,7 +264,8 @@ int main(int argc, char **argv)
 
 		case 'E':
 			if (optarg[0] != '/') {
-				fprintf(stderr, "Error: Invalid error handler: %s\n", optarg);
+				fprintf(stderr, "Error: Invalid error handler: %s\n",
+						optarg);
 				exit(1);
 			}
 			conf.error_handler = optarg;
@@ -252,7 +273,8 @@ int main(int argc, char **argv)
 
 		case 'I':
 			if (optarg[0] == '/') {
-				fprintf(stderr, "Error: Invalid index page: %s\n",optarg);
+				fprintf(stderr, "Error: Invalid index page: %s\n",
+						optarg);
 				exit(1);
 			}
 			uh_index_add(optarg);
@@ -277,7 +299,25 @@ int main(int argc, char **argv)
 		case 'N':
 			conf.max_connections = atoi(optarg);
 			break;
-                        
+
+		case 'x':
+			fixup_prefix(optarg);
+			conf.cgi_prefix = optarg;
+			break;
+
+		case 'i':
+			optarg = strdup(optarg);
+			port = strchr(optarg, '=');
+			if (optarg[0] != '.' || !port) {
+				fprintf(stderr, "Error: Invalid interpreter: %s\n",
+						optarg);
+				exit(1);
+			}
+
+			*port++ = 0;
+			uh_interpreter_add(optarg, port);
+			break;
+
 		case 't':
 			conf.script_timeout = atoi(optarg);
 			break;
@@ -298,9 +338,36 @@ int main(int argc, char **argv)
 			nofork = 1;
 			break;
 
+		case 'd':
+			optarg = strdup(optarg);
+			port = alloca(strlen(optarg) + 1);
+			if (!port)
+				return -1;
+
+			/* "decode" plus to space to retain compat */
+			for (opt = 0; optarg[opt]; opt++)
+				if (optarg[opt] == '+')
+					optarg[opt] = ' ';
+
+			/* opt now contains strlen(optarg) -- no need to re-scan */
+			if (uh_urldecode(port, opt, optarg, opt) < 0) {
+				fprintf(stderr, "uhttpd: invalid encoding\n");
+				return -1;
+			}
+
+			printf("%s", port);
+			return 0;
+			break;
+
 		/* basic auth realm */
 		case 'r':
 			conf.realm = optarg;
+			break;
+
+		/* md5 crypt */
+		case 'm':
+			printf("%s\n", crypt(optarg, "$1$"));
+			return 0;
 			break;
 
 		/* config file */
@@ -308,6 +375,21 @@ int main(int argc, char **argv)
 			conf.file = optarg;
 			break;
 
+#ifdef HAVE_LUA
+		case 'l':
+			conf.lua_prefix = optarg;
+			break;
+
+		case 'L':
+			conf.lua_handler = optarg;
+			break;
+#else
+		case 'l':
+		case 'L':
+			fprintf(stderr, "uhttpd: Lua support not compiled, "
+			                "ignoring -%c\n", opt);
+			break;
+#endif
 #ifdef HAVE_UBUS
 		case 'a':
 			conf.ubus_noauth = 1;
@@ -324,30 +406,27 @@ int main(int argc, char **argv)
 		case 'a':
 		case 'u':
 		case 'U':
-			fprintf(stderr, "woodbox-server: UBUS support not compiled, ignoring -%c\n", opt);
+			fprintf(stderr, "uhttpd: UBUS support not compiled, "
+			                "ignoring -%c\n", opt);
 			break;
 #endif
 		default:
-			return usage();
+			return usage(argv[0]);
 		}
 	}
-        
-        /* Parse configuration file*/
+
 	uh_config_parse();
-        
-        /* Configure document root */
+
 	if (!conf.docroot) {
-                if (!realpath(".", uh_buf)) {
+		if (!realpath(".", uh_buf)) {
 			fprintf(stderr, "Error: Unable to determine work dir\n");
 			return 1;
 		}
 		conf.docroot = strdup(uh_buf);
 	}
-        
-        /* Set "index.html" as index file */
-	uh_index_add("index.html");
-        
-        /* Check if server is bound to a port */
+
+	init_defaults_post();
+
 	if (!bound) {
 		fprintf(stderr, "Error: No sockets bound, unable to continue\n");
 		return 1;
@@ -366,6 +445,16 @@ int main(int argc, char **argv)
 	}
 #endif
 
+#ifdef HAVE_LUA
+	if (conf.lua_handler || conf.lua_prefix) {
+		if (!conf.lua_handler || !conf.lua_prefix) {
+			fprintf(stderr, "Need handler and prefix to enable Lua support\n");
+			return 1;
+		}
+		if (uh_plugin_init("uhttpd_lua.so"))
+			return 1;
+	}
+#endif
 #ifdef HAVE_UBUS
 	if (conf.ubus_prefix && uh_plugin_init("uhttpd_ubus.so"))
 		return 1;
@@ -396,7 +485,6 @@ int main(int argc, char **argv)
 			exit(0);
 		}
 	}
-        
-        /* Start running the server */
+
 	return run_server();
 }
