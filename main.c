@@ -47,6 +47,11 @@ int main(int argc, char **argv)
 	/* Prevent SIGPIPE errors */
 	signal(SIGPIPE, SIG_IGN);
 
+	/* Load default configuration */
+	if(!load_configuration()){
+		return EXIT_FAILURE;
+	}
+
 	/* fork (if not disabled) */
 	if (FORK_ON_START) {
 		switch (fork()) {
