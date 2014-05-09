@@ -448,7 +448,6 @@ void uh_client_read_cb(struct client *cl)
 	client_done = false;
 	do {
 		str = ustream_get_read_buf(us, &len);
-                printf("%s\r\n", str);
 		if (!str || !len)
 			break;
 

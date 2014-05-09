@@ -46,12 +46,15 @@ static void free_response(struct client *cl)
 
 bool handle_request(struct client *cl, char *url) {
 #ifdef DEBUG
-	printf("Handling request: %s\r\n", url);
-        printf("Request method: ");
-        if(cl->request.method == UH_HTTP_MSG_GET){
-            printf("GET\r\n");
-        } else {
-            printf("POST\r\n");
+    char* str;
+    
+    printf("Handling request: %s\r\n", url);
+    printf("Request method: ");
+    if(cl->request.method == UH_HTTP_MSG_GET){
+        printf("GET\r\n");
+    } else {
+        printf("POST\r\n");
+        str = ustream_get_read_buf(us, &len);
         }       
 #endif
 	
