@@ -7,7 +7,7 @@ INCLUDE (CheckFunctionExists)
 SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 ADD_DEFINITIONS(-Os -Wall -Werror -Wmissing-declarations --std=gnu99 -g3)
 
-OPTION(TLS_SUPPORT "TLS support" OFF)
+OPTION(TLS_SUPPORT "TLS support" ON)
 OPTION(UBUS_SUPPORT "ubus support" OFF)
 
 IF(APPLE)
