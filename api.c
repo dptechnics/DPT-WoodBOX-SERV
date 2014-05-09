@@ -57,9 +57,9 @@ bool handle_request(struct client *cl, char *url) {
         }
         
         
-        printf("Header: ", cl->hdr.buf);
+        printf("Header: ");
         for(i = 0; i < cl->hdr.buflen; ++i) {
-            printf("%d", cl->hdr.buf[i]);
+            printf("%d", ((char*)cl->hdr.buf)[i]);
         }
         printf("\r\n");
        
