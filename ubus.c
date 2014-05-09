@@ -25,6 +25,7 @@
 #include <poll.h>
 
 #include "uhttpd.h"
+#include "plugin.h"
 
 static const struct uhttpd_ops *ops;
 static struct config *_conf;

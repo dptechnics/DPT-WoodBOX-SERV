@@ -199,24 +199,6 @@ struct dispatch_ubus {
 	bool array;
 	int array_idx;
 };
-
-struct uhttpd_ops {
-	void (*dispatch_add)(struct dispatch_handler *d);
-	bool (*path_match)(const char *prefix, const char *url);
-
-	bool (*create_process)(struct client *cl, struct path_info *pi, char *url,
-			       void (*cb)(struct client *cl, struct path_info *pi, char *url));
-	struct env_var *(*get_process_vars)(struct client *cl, struct path_info *pi);
-
-	void (*http_header)(struct client *cl, int code, const char *summary);
-	void (*client_error)(struct client *cl, int code, const char *summary, const char *fmt, ...);
-	void (*request_done)(struct client *cl);
-	void (*chunk_write)(struct client *cl, const void *data, int len);
-	void (*chunk_printf)(struct client *cl, const char *format, ...);
-
-	int (*urlencode)(char *buf, int blen, const char *src, int slen);
-	int (*urldecode)(char *buf, int blen, const char *src, int slen);
-};
 #endif
 
 struct dispatch {
