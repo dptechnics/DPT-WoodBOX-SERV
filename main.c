@@ -177,7 +177,7 @@ int main(int argc, char **argv)
 {
 	bool nofork = false;
 	char *port;
-	int opt, ch;
+	int ch;
 	int cur_fd;
 	int bound = 0;
 
