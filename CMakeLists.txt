@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-PROJECT(uhttpd C)
+PROJECT(woodbox-server C)
 
 INCLUDE (CheckFunctionExists)
 
@@ -21,7 +21,7 @@ IF(LIBS STREQUAL "LIBS-NOTFOUND")
 	SET(LIBS "")
 ENDIF()
 
-SET(SOURCES main.c listen.c client.c utils.c file.c auth.c cgi.c relay.c proc.c plugin.c)
+SET(SOURCES main.c listen.c client.c utils.c file.c auth.c cgi.c relay.c proc.c plugin.c api.c)
 IF(TLS_SUPPORT)
 	SET(SOURCES ${SOURCES} tls.c)
 	ADD_DEFINITIONS(-DHAVE_TLS)
@@ -32,8 +32,8 @@ IF(HAVE_SHADOW)
     ADD_DEFINITIONS(-DHAVE_SHADOW)
 ENDIF()
 
-ADD_EXECUTABLE(uhttpd ${SOURCES})
-TARGET_LINK_LIBRARIES(uhttpd ubox dl ${LIBS})
+ADD_EXECUTABLE(woodbox-server ${SOURCES})
+TARGET_LINK_LIBRARIES(woodbox-server ubox dl ${LIBS})
 
 SET(PLUGINS "")
 IF(LUA_SUPPORT)
@@ -79,7 +79,7 @@ IF(PLUGINS)
 	)
 ENDIF()
 
-INSTALL(TARGETS uhttpd ${PLUGINS}
+INSTALL(TARGETS woodbox-server ${PLUGINS}
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
 )
