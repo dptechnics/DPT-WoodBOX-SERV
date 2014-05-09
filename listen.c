@@ -16,6 +16,7 @@
 #include <netdb.h>
 #include <stdbool.h>
 
+#include "listen.h"
 #include "uhttpd.h"
 
 /**
