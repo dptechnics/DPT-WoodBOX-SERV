@@ -274,7 +274,6 @@ void __printf(4, 5)
 uh_client_error(struct client *cl, int code, const char *summary, const char *fmt, ...);
 
 void uh_handle_request(struct client *cl);
-void client_poll_post_data(struct client *cl);
 void uh_client_read_cb(struct client *cl);
 void uh_client_notify_state(struct client *cl);
 

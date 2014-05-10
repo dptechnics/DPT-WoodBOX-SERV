@@ -37,4 +37,10 @@ void request_done(struct client *cl);
  */
 void __printf(4, 5) send_client_error(struct client *cl, int code, const char *summary, const char *fmt, ...);
 
+/**
+ * Parse client POST data
+ * @cl the client who sent de data
+ */
+void client_post_data(struct client *cl);
+
 #endif /* CLIENT_H_ */

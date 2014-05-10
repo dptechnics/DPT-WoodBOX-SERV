@@ -256,7 +256,7 @@ static void proc_write_cb(struct uloop_fd *fd, unsigned int events)
 {
 	struct client *cl = container_of(fd, struct client, dispatch.proc.wrfd);
 
-	client_poll_post_data(cl);
+	client_post_data(cl);
 }
 
 static void proc_relay_write_cb(struct client *cl)

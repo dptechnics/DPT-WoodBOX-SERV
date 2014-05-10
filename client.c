@@ -299,8 +299,10 @@ static bool client_init_handler(struct client *cl, char *buf, int len)
 		return true;
 	}
 
-	/* Parse the header in the buffer and consume the stream */
+	/* Nullterminate the string */
 	*newline = 0;
+
+	/* Parse the header in the buffer and consume the stream */
 	blob_buf_init(&cl->hdr, 0);
 	cl->state = parse_client_request(cl, buf);
 	ustream_consume(cl->us, newline + 2 - buf);
@@ -345,9 +347,9 @@ static void client_header_complete(struct client *cl)
 }
 
 /**
- * Parse the client header
+ * Parse a client header line not containing a newline on the end.
  * @cl the client who sent the header
- * @data the data in thea header
+ * @data a line from the client header
  */
 static void client_parse_header(struct client *cl, char *data)
 {
@@ -355,8 +357,6 @@ static void client_parse_header(struct client *cl, char *data)
 	char *err;
 	char *name;
 	char *val;
-
-	printf("Data: %s\r\n", data);
 
 	/* If there is no data wait for it */
 	if (!*data) {
@@ -366,7 +366,8 @@ static void client_parse_header(struct client *cl, char *data)
 		return;
 	}
 
-	/* Split the header into name-value pair*/
+	/* Split the header into name-value pair, when there is no more
+	 * data stop parsing headers */
 	val = uh_split_header(data);
 	if (!val) {
 		cl->state = CLIENT_STATE_DONE;
@@ -378,7 +379,7 @@ static void client_parse_header(struct client *cl, char *data)
 		if (isupper(*name))
 			*name = tolower(*name);
 
-	/* Check if this header should be continued */
+	/* Parse function for every possible header name-value pair */
 	if (!strcmp(data, "expect")) {
 		if (!strcasecmp(val, "100-continue"))
 			r->expect_cont = true;
@@ -408,9 +409,11 @@ static void client_parse_header(struct client *cl, char *data)
 			if (str[5] && str[6] == '.') {
 				switch (str[5]) {
 				case '6':
-					if (strstr(str, "SV1"))
+					if (strstr(str, "SV1")) {
 						break;
-					/* fall through */
+					}
+					r->ua = UH_UA_MSIE_OLD;
+					break;
 				case '5':
 				case '4':
 					r->ua = UH_UA_MSIE_OLD;
@@ -428,19 +431,25 @@ static void client_parse_header(struct client *cl, char *data)
 			r->ua = UH_UA_KONQUEROR;
 	}
 
-
+	/* Add the key value pair to hte header data */
 	blobmsg_add_string(&cl->hdr, data, val);
 
+	/* Flag to state we are ready to parse the next header line */
 	cl->state = CLIENT_STATE_HEADER;
 }
 
-void client_poll_post_data(struct client *cl)
+/**
+ * Retreive client post data
+ * @cl the client who sent de data
+ */
+void client_post_data(struct client *cl)
 {
 	struct dispatch *d = &cl->dispatch;
 	struct http_request *r = &cl->request;
 	char *buf;
 	int len;
 
+	/* If there is no data to handle return */
 	if (cl->state == CLIENT_STATE_DONE)
 		return;
 
@@ -449,15 +458,19 @@ void client_poll_post_data(struct client *cl)
 		int offset = 0;
 		int cur_len;
 
+		/* Get the data buffer */
 		buf = ustream_get_read_buf(cl->us, &len);
 		if (!buf || !len)
 			break;
 
+		/* If there is data to be sent return */
 		if (!d->data_send)
 			return;
 
+		/* Get the current lenght of the buffer */
 		cur_len = min(r->content_length, len);
 		if (cur_len) {
+			/* Stop if the data is blocked */
 			if (d->data_blocked)
 				break;
 
@@ -469,17 +482,21 @@ void client_poll_post_data(struct client *cl)
 			continue;
 		}
 
+		/* Stop is the transfer is not chunked */
 		if (!r->transfer_chunked)
 			break;
 
 		if (r->transfer_chunked > 1)
 			offset = 2;
 
+		/* Get the POST data separator */
 		sep = strstr(buf + offset, "\r\n");
 		if (!sep)
 			break;
 
+		/* Nullterminate the string */
 		*sep = 0;
+		printf("Post data separator: %s", sep);
 
 		r->content_length = strtoul(buf + offset, &sep, 16);
 		r->transfer_chunked++;
@@ -499,9 +516,9 @@ void client_poll_post_data(struct client *cl)
 		}
 	}
 
+	/* Read the parameter into the buffer */
 	buf = ustream_get_read_buf(cl->us, &len);
-	if (!r->content_length && !r->transfer_chunked &&
-		cl->state != CLIENT_STATE_DONE) {
+	if (!r->content_length && !r->transfer_chunked && cl->state != CLIENT_STATE_DONE) {
 		if (cl->dispatch.data_done)
 			cl->dispatch.data_done(cl);
 
@@ -509,9 +526,9 @@ void client_poll_post_data(struct client *cl)
 	}
 }
 
-static bool client_data_cb(struct client *cl, char *buf, int len)
+static bool client_data_handler(struct client *cl, char *buf, int len)
 {
-	client_poll_post_data(cl);
+	client_post_data(cl);
 	return false;
 }
 
@@ -529,7 +546,7 @@ static bool client_header_cb(struct client *cl, char *buf, int len)
 	line_len = newline + 2 - buf;
 	ustream_consume(cl->us, line_len);
 	if (cl->state == CLIENT_STATE_DATA)
-		return client_data_cb(cl, newline + 2, len - line_len);
+		return client_data_handler(cl, newline + 2, len - line_len);
 
 	return true;
 }
@@ -538,7 +555,7 @@ typedef bool (*read_cb_t)(struct client *cl, char *buf, int len);
 static read_cb_t read_cbs[] = {
 	[CLIENT_STATE_INIT] = client_init_handler,
 	[CLIENT_STATE_HEADER] = client_header_cb,
-	[CLIENT_STATE_DATA] = client_data_cb,
+	[CLIENT_STATE_DATA] = client_data_handler,
 };
 
 void uh_client_read_cb(struct client *cl)
