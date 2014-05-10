@@ -22,6 +22,7 @@
 #include <netdb.h>
 #include <signal.h>
 
+#include <libubox/uloop.h>
 #include <libubox/usock.h>
 
 #include "listen.h"
