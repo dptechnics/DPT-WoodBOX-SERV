@@ -278,13 +278,14 @@ static int parse_client_request(struct client *cl, char *data)
 }
 
 /**
- * This function is called when a client makes a new request
+ * This function is called when a client makes a new request.
+ * @cl the client that made the request
+ * @buf the buffer containing the request data
+ * @len the lenght of the request
  */
 static bool client_init_handler(struct client *cl, char *buf, int len)
 {
 	char *newline;
-
-	printf("%s", buf);
 
 	/* Get the first newline in the the header, if there is no newlien
 	 * the header is faulty */
@@ -311,36 +312,28 @@ static bool client_init_handler(struct client *cl, char *buf, int len)
 	return true;
 }
 
-static bool rfc1918_filter_check(struct client *cl)
-{
-	if (!conf.rfc1918_filter)
-		return true;
-
-	if (!uh_addr_rfc1918(&cl->peer_addr) || uh_addr_rfc1918(&cl->srv_addr))
-		return true;
-
-	send_client_error(cl, 403, "Forbidden",
-			"Rejected request from RFC1918 IP "
-			"to public server address");
-	return false;
-}
-
+/**
+ * This function should be called when header
+ * parsing is complete.
+ * @cl: the client to parse the header from
+ */
 static void client_header_complete(struct client *cl)
 {
 	struct http_request *r = &cl->request;
 
-	if (!rfc1918_filter_check(cl))
-		return;
-
+	/* If a contiuation is expected return status 100 */
 	if (r->expect_cont)
 		ustream_printf(cl->us, "HTTP/1.1 100 Continue\r\n\r\n");
 
+	/* Older browser compatibility */
 	switch(r->ua) {
 	case UH_UA_MSIE_OLD:
-		if (r->method != UH_HTTP_MSG_POST)
+		if (r->method != UH_HTTP_MSG_POST){
 			break;
-
-		/* fall through */
+		} else {
+			r->connection_close = true;
+		}
+		break;
 	case UH_UA_SAFARI:
 		r->connection_close = true;
 		break;
@@ -351,12 +344,19 @@ static void client_header_complete(struct client *cl)
 	uh_handle_request(cl);
 }
 
+/**
+ * Parse the client header
+ * @cl the client who sent the header
+ * @data the data in thea header
+ */
 static void client_parse_header(struct client *cl, char *data)
 {
 	struct http_request *r = &cl->request;
 	char *err;
 	char *name;
 	char *val;
+
+	printf("%s\r\n", data);
 
 	if (!*data) {
 		uloop_timeout_cancel(&cl->timeout);
