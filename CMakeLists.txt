@@ -20,7 +20,7 @@ IF(LIBS STREQUAL "LIBS-NOTFOUND")
 	SET(LIBS "")
 ENDIF()
 
-SET(SOURCES main.c listen.c client.c utils.c file.c auth.c cgi.c relay.c proc.c plugin.c api.c)
+SET(SOURCES main.c listen.c client.c utils.c file.c auth.c cgi.c relay.c proc.c api.c)
 IF(TLS_SUPPORT)
 	SET(SOURCES ${SOURCES} tls.c)
 	ADD_DEFINITIONS(-DHAVE_TLS)
@@ -32,25 +32,9 @@ IF(HAVE_SHADOW)
 ENDIF()
 
 ADD_EXECUTABLE(woodbox-server ${SOURCES})
-TARGET_LINK_LIBRARIES(woodbox-server ubox dl ${LIBS})
+TARGET_LINK_LIBRARIES(woodbox-server dl ${LIBS})
 
-SET(PLUGINS "")
-
-IF(UBUS_SUPPORT)
-	SET(PLUGINS ${PLUGINS} uhttpd_ubus)
-	ADD_DEFINITIONS(-DHAVE_UBUS)
-	ADD_LIBRARY(uhttpd_ubus MODULE ubus.c)
-	FIND_LIBRARY(libjson NAMES json-c json)
-	TARGET_LINK_LIBRARIES(uhttpd_ubus ubus ubox blobmsg_json ${libjson})
-ENDIF()
-
-IF(PLUGINS)
-	SET_TARGET_PROPERTIES(${PLUGINS} PROPERTIES
-		PREFIX ""
-	)
-ENDIF()
-
-INSTALL(TARGETS woodbox-server ${PLUGINS}
+INSTALL(TARGETS woodbox-server
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
 )

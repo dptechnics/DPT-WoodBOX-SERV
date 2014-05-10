@@ -80,7 +80,6 @@ int main(int argc, char **argv)
 	/* Set up uloop event loop */
 	uloop_init();
 	setup_listeners();
-	uh_plugin_post_init();
 	uloop_run();
 
 	return EXIT_SUCCESS;
