@@ -9,6 +9,7 @@
 #include "uhttpd.h"
 #include "mimetypes.h"
 #include "api.h"
+#include "client.h"
 
 #define DEBUG
 
@@ -59,7 +60,7 @@ bool handle_request(struct client *cl, char *url) {
         
 	
 	/* write status */
-	uh_http_header(cl, 200, "OK");
+        write_http_header(cl, 200, "OK");
 
 	ustream_printf(cl->us, "Content-Type: %s\r\n", "application/json");
 	ustream_printf(cl->us, "Content-Length: %i\r\n\r\n",strlen(response));

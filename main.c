@@ -78,9 +78,13 @@ int main(int argc, char **argv)
 		}
 	}
 
-	/* Set up uloop event loop */
+	/* Initialize network event loop */
 	uloop_init();
+
+	/* Set up all listener sockets */
 	setup_listeners();
+
+	/* Start the network event loop */
 	uloop_run();
 
 	return EXIT_SUCCESS;

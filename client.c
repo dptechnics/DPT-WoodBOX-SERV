@@ -1,68 +1,81 @@
 /*
- * uhttpd - Tiny single-threaded httpd
+ * WoodBOX-server
  *
- *   Copyright (C) 2010-2013 Jo-Philipp Wich <xm@subsignal.org>
- *   Copyright (C) 2013 Felix Fietkau <nbd@openwrt.org>
+ * Server appliction for the DPTechnics WoodBOX.
  *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
+ * File: client.c
+ * Description: all low level reading and writing occurs here.
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Created by: Daan Pape
+ * Created on: May 10, 2014
  */
 
 #include <libubox/blobmsg.h>
 #include <ctype.h>
 
+#include "config.h"
 #include "listen.h"
 #include "uhttpd.h"
 #include "tls.h"
 
+/* The list of connected clients */
 static LIST_HEAD(clients);
+
+/* The number of connected clients */
+int n_clients = 0;
+
+/* Status flag for currently selected client */
 static bool client_done = false;
 
-int n_clients = 0;
+/* The server configuration */
 struct config conf = {};
 
+/* Array giving string representation to 'http_version' enum */
 const char * const http_versions[] = {
 	[UH_HTTP_VER_0_9] = "HTTP/0.9",
 	[UH_HTTP_VER_1_0] = "HTTP/1.0",
 	[UH_HTTP_VER_1_1] = "HTTP/1.1",
 };
 
+/* Array giving string representations to 'http_method' enum */
 const char * const http_methods[] = {
 	[UH_HTTP_MSG_GET] = "GET",
 	[UH_HTTP_MSG_POST] = "POST",
 	[UH_HTTP_MSG_HEAD] = "HEAD",
 };
 
-void uh_http_header(struct client *cl, int code, const char *summary)
+/**
+ * Write a http header to a client
+ * @client the client to write the header to
+ * @code the http status code t o write
+ * @summary the http status code info, for example if code = 200, summary = "Ok"
+ */
+void write_http_header(struct client *cl, int code, const char *summary)
 {
 	struct http_request *r = &cl->request;
 	const char *enc = "Transfer-Encoding: chunked\r\n";
 	const char *conn;
 
+	/* If no chunked transfer is used, remove the encoding line */
 	if (!uh_use_chunked(cl))
 		enc = "";
 
+	/* Check if connection should be closed or kept open after request */
 	if (r->connection_close)
 		conn = "Connection: close";
 	else
 		conn = "Connection: Keep-Alive";
 
+	/* Send the header to the client */
 	ustream_printf(cl->us, "%s %03i %s\r\n%s\r\n%s",
 		http_versions[cl->request.version],
 		code, summary, conn, enc);
 
+	/* If this is a Keep-Alive connection, send the keep alive time */
 	if (!r->connection_close)
-		ustream_printf(cl->us, "Keep-Alive: timeout=%d\r\n", conf.http_keepalive);
+		ustream_printf(cl->us, "Keep-Alive: timeout=%d\r\n", KEEP_ALIVE_TIME);
 }
+
 
 static void uh_connection_close(struct client *cl)
 {
@@ -127,7 +140,7 @@ uh_client_error(struct client *cl, int code, const char *summary, const char *fm
 {
 	va_list arg;
 
-	uh_http_header(cl, code, summary);
+	write_http_header(cl, code, summary);
 	ustream_printf(cl->us, "Content-Type: text/html\r\n\r\n");
 
 	uh_chunk_printf(cl, "<h1>%s</h1>", summary);

@@ -16,5 +16,6 @@
 #define FORK_ON_START 			false		/* True if the server should fork on startup */
 #define WORKING_BUFF_SIZE		4096		/* Size of the working buffer, should be smaller than PAGE_MAX */
 
+#define KEEP_ALIVE_TIME			20			/* Time in seconds for Keep-Alive connections */
 
 #endif

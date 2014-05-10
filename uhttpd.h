@@ -29,10 +29,6 @@
 #include <libubox/ustream.h>
 #include <libubox/blob.h>
 #include <libubox/utils.h>
-#ifdef HAVE_UBUS
-#include <libubus.h>
-#include <json/json.h>
-#endif
 #ifdef HAVE_TLS
 #include <libubox/ustream-ssl.h>
 #endif
@@ -273,7 +269,6 @@ uh_chunk_printf(struct client *cl, const char *format, ...);
 void uh_chunk_eof(struct client *cl);
 void uh_request_done(struct client *cl);
 
-void uh_http_header(struct client *cl, int code, const char *summary);
 void __printf(4, 5)
 uh_client_error(struct client *cl, int code, const char *summary, const char *fmt, ...);
 

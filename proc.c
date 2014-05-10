@@ -20,6 +20,7 @@
 #include <arpa/inet.h>
 #include <libubox/blobmsg.h>
 #include "uhttpd.h"
+#include "client.h"
 
 #define __headers \
 	__header(accept, accept) \
@@ -219,7 +220,7 @@ static void proc_handle_header_end(struct relay *r)
 	int rem;
 
 	uloop_timeout_cancel(&p->timeout);
-	uh_http_header(cl, cl->dispatch.proc.status_code, cl->dispatch.proc.status_msg);
+	write_http_header(cl, cl->dispatch.proc.status_code, cl->dispatch.proc.status_msg);
 	blob_for_each_attr(cur, cl->dispatch.proc.hdr.head, rem)
 		ustream_printf(cl->us, "%s: %s\r\n", blobmsg_name(cur), blobmsg_data(cur));
 

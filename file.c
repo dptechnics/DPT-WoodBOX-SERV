@@ -31,6 +31,7 @@
 
 #include "uhttpd.h"
 #include "mimetypes.h"
+#include "client.h"
 
 static LIST_HEAD(index_files);
 static LIST_HEAD(dispatch_handlers);
@@ -231,7 +232,7 @@ uh_path_lookup(struct client *cl, const char *url)
 	   is missing in the request url, redirect the client to the same
 	   url with trailing slash appended */
 	if (!slash) {
-		uh_http_header(cl, 302, "Found");
+		write_http_header(cl, 302, "Found");
 		ustream_printf(cl->us, "Content-Length: 0\r\n");
 		ustream_printf(cl->us, "Location: %s%s%s\r\n\r\n",
 				&path_phys[docroot_len],
@@ -339,20 +340,20 @@ static void uh_file_response_ok_hdrs(struct client *cl, struct stat *s)
 
 static void uh_file_response_200(struct client *cl, struct stat *s)
 {
-	uh_http_header(cl, 200, "OK");
+	write_http_header(cl, 200, "OK");
 	return uh_file_response_ok_hdrs(cl, s);
 }
 
 static void uh_file_response_304(struct client *cl, struct stat *s)
 {
-	uh_http_header(cl, 304, "Not Modified");
+	write_http_header(cl, 304, "Not Modified");
 
 	return uh_file_response_ok_hdrs(cl, s);
 }
 
 static void uh_file_response_412(struct client *cl)
 {
-	uh_http_header(cl, 412, "Precondition Failed");
+	write_http_header(cl, 412, "Precondition Failed");
 }
 
 static bool uh_file_if_match(struct client *cl, struct stat *s)

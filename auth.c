@@ -24,6 +24,7 @@
 #include <shadow.h>
 #endif
 #include "uhttpd.h"
+#include "client.h"
 
 static LIST_HEAD(auth_realms);
 
@@ -123,7 +124,7 @@ bool uh_auth_check(struct client *cl, struct path_info *pi)
 	     !strcmp(crypt(pass, realm->pass), realm->pass)))
 		return true;
 
-	uh_http_header(cl, 401, "Authorization Required");
+	write_http_header(cl, 401, "Authorization Required");
 	ustream_printf(cl->us,
 				  "WWW-Authenticate: Basic realm=\"%s\"\r\n"
 				  "Content-Type: text/plain\r\n\r\n",
