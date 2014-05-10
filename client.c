@@ -17,6 +17,7 @@
 #include "listen.h"
 #include "uhttpd.h"
 #include "tls.h"
+#include "client.h"
 
 /* The list of connected clients */
 static LIST_HEAD(clients);
