@@ -356,8 +356,9 @@ static void client_parse_header(struct client *cl, char *data)
 	char *name;
 	char *val;
 
-	printf("%s\r\n", data);
+	printf("Data: %s\r\n", data);
 
+	/* If there is no data wait for it */
 	if (!*data) {
 		uloop_timeout_cancel(&cl->timeout);
 		cl->state = CLIENT_STATE_DATA;
@@ -365,16 +366,19 @@ static void client_parse_header(struct client *cl, char *data)
 		return;
 	}
 
+	/* Split the header into name-value pair*/
 	val = uh_split_header(data);
 	if (!val) {
 		cl->state = CLIENT_STATE_DONE;
 		return;
 	}
 
+	/* Set all characters to lower case */
 	for (name = data; *name; name++)
 		if (isupper(*name))
 			*name = tolower(*name);
 
+	/* Check if this header should be continued */
 	if (!strcmp(data, "expect")) {
 		if (!strcasecmp(val, "100-continue"))
 			r->expect_cont = true;
