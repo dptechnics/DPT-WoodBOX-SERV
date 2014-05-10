@@ -38,38 +38,52 @@ static LIST_HEAD(listeners);
 /* The number of blocked clients */
 static int n_blocked;
 
-void uh_close_listen_fds(void)
+/**
+ * Close all listening sockets
+ */
+void close_listeners(void)
 {
 	struct listener *l;
 
+	/* Close all sockets in the listeners */
 	list_for_each_entry(l, &listeners, list)
 		close(l->fd.fd);
 }
 
-
+/**
+ * If there is room for new connections unblock them
+ * until the queue is full again.
+ */
 static void uh_poll_listeners(struct uloop_timeout *timeout)
 {
 	struct listener *l;
 
-	if ((!n_blocked && conf.max_connections) ||
-	    n_clients >= conf.max_connections)
+	/* Check if there is room for new connections */
+	if ((!n_blocked && conf.max_connections) || n_clients >= conf.max_connections) {
 		return;
+	}
 
+	/* For each blocked listener, attach READ events*/
 	list_for_each_entry(l, &listeners, list) {
-		if (!l->blocked)
-			continue;
+		if (l->blocked){
 
-		l->fd.cb(&l->fd, ULOOP_READ);
-	    if (n_clients >= conf.max_connections)
-			break;
+			/* Check if it can be unblocked */
+			l->fd.cb(&l->fd, ULOOP_READ);
+			if (n_clients >= conf.max_connections)
+				break;
 
-		n_blocked--;
-		l->blocked = false;
-		uloop_fd_add(&l->fd, ULOOP_READ);
+			/* Unblock listener */
+			--n_blocked;
+			l->blocked = false;
+			uloop_fd_add(&l->fd, ULOOP_READ);
+		}
 	}
 }
 
-void uh_unblock_listeners(void)
+/**
+ * Unblock all blocked listeners in the listener list.
+ */
+void unblock_listeners(void)
 {
 	static struct uloop_timeout poll_timer = {
 		.cb = uh_poll_listeners
@@ -166,59 +180,63 @@ bool bind_listener_sockets(const char *host, const char *port, bool tls)
 
 	/* Try to bind a socket to each address returned from the translation*/
 	for (p = addrs; p; p = p->ai_next) {
-		/* get the socket */
+		/* Create the socket */
 		sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 		if (sock < 0) {
 			perror("socket()");
 			goto error;
 		}
 
-		/* "address already in use" */
+		/* Check if the address is not allready in use */
 		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))) {
 			perror("setsockopt()");
 			goto error;
 		}
 
-		/* required to get parallel v4 + v6 working */
+		/* Required to get parallel v4 + v6 working */
 		if (p->ai_family == AF_INET6 &&
 		    setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &yes, sizeof(yes)) < 0) {
 			perror("setsockopt()");
 			goto error;
 		}
 
-		/* bind */
+		/* Bind the socket to the port and address */
 		if (bind(sock, p->ai_addr, p->ai_addrlen) < 0) {
 			perror("bind()");
 			goto error;
 		}
 
-		/* listen */
+		/* Make a server socket  */
 		if (listen(sock, UH_LIMIT_CLIENTS) < 0) {
 			perror("listen()");
 			goto error;
 		}
 
+		/* Change the file discriptor of the socket */
 		fd_cloexec(sock);
 
-
+		/* Reserver memory space for the listener */
 		l = calloc(1, sizeof(*l));
 		if (!l) {
 			goto error;
 		}
 
+		/* Save the socket and TLS flag in the listener and append it to the listenerlist */
 		l->fd.fd = sock;
 		l->tls = tls;
 		list_add_tail(&l->list, &listeners);
 
+		/* Continue the loop when no error occured */
 		continue;
-
 error:
-		if (sock > -1)
+		/* Close socket if it was allready open */
+		if (sock > -1) {
 			close(sock);
+		}
 		return false;
 	}
 
+	/* Free the address list */
 	freeaddrinfo(addrs);
-
 	return true;
 }

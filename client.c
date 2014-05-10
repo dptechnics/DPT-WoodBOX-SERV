@@ -20,6 +20,7 @@
 #include <libubox/blobmsg.h>
 #include <ctype.h>
 
+#include "listen.h"
 #include "uhttpd.h"
 #include "tls.h"
 
@@ -480,7 +481,7 @@ static void client_close(struct client *cl)
 	blob_buf_free(&cl->hdr);
 	free(cl);
 
-	uh_unblock_listeners();
+	unblock_listeners();
 }
 
 void uh_client_notify_state(struct client *cl)
@@ -587,7 +588,7 @@ void uh_close_fds(void)
 	struct client *cl;
 
 	uloop_done();
-	uh_close_listen_fds();
+	close_listeners();
 	list_for_each_entry(cl, &clients, list) {
 		close(cl->sfd.fd.fd);
 		if (cl->dispatch.close_fds)
