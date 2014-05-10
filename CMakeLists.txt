@@ -32,9 +32,25 @@ IF(HAVE_SHADOW)
 ENDIF()
 
 ADD_EXECUTABLE(woodbox-server ${SOURCES})
-TARGET_LINK_LIBRARIES(woodbox-server dl ${LIBS})
+TARGET_LINK_LIBRARIES(woodbox-server ubox dl ${LIBS})
 
-INSTALL(TARGETS woodbox-server
+SET(PLUGINS "")
+
+IF(UBUS_SUPPORT)
+	SET(PLUGINS ${PLUGINS} uhttpd_ubus)
+	ADD_DEFINITIONS(-DHAVE_UBUS)
+	ADD_LIBRARY(uhttpd_ubus MODULE ubus.c)
+	FIND_LIBRARY(libjson NAMES json-c json)
+	TARGET_LINK_LIBRARIES(uhttpd_ubus ubus ubox blobmsg_json ${libjson})
+ENDIF()
+
+IF(PLUGINS)
+	SET_TARGET_PROPERTIES(${PLUGINS} PROPERTIES
+		PREFIX ""
+	)
+ENDIF()
+
+INSTALL(TARGETS woodbox-server ${PLUGINS}
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
 )
