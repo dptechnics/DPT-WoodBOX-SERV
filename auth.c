@@ -130,7 +130,7 @@ bool uh_auth_check(struct client *cl, struct path_info *pi)
 				  "Content-Type: text/plain\r\n\r\n",
 				  conf.realm);
 	uh_chunk_printf(cl, "Authorization Required\n");
-	uh_request_done(cl);
+	request_done(cl);
 
 	return false;
 }

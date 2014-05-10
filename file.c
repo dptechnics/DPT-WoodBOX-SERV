@@ -238,7 +238,7 @@ uh_path_lookup(struct client *cl, const char *url)
 				&path_phys[docroot_len],
 				p.query ? "?" : "",
 				p.query ? p.query : "");
-		uh_request_done(cl);
+		request_done(cl);
 		p.redirected = 1;
 		return &p;
 	}
@@ -531,7 +531,7 @@ static void uh_file_dirlist(struct client *cl, struct path_info *pi)
 	free(files);
 
 	uh_chunk_printf(cl, "</ol><hr /></body></html>");
-	uh_request_done(cl);
+	request_done(cl);
 }
 
 static void file_write_cb(struct client *cl)
@@ -547,7 +547,7 @@ static void file_write_cb(struct client *cl)
 		}
 
 		if (!r) {
-			uh_request_done(cl);
+			request_done(cl);
 			return;
 		}
 
@@ -570,7 +570,7 @@ static void uh_file_data(struct client *cl, struct path_info *pi, int fd)
 		!uh_file_if_none_match(cl, &pi->stat)) {
 		ustream_printf(cl->us, "Content-Length: 0\r\n");
 		ustream_printf(cl->us, "\r\n");
-		uh_request_done(cl);
+		request_done(cl);
 		close(fd);
 		return;
 	}
@@ -587,7 +587,7 @@ static void uh_file_data(struct client *cl, struct path_info *pi, int fd)
 
 	/* send body */
 	if (cl->request.method == UH_HTTP_MSG_HEAD) {
-		uh_request_done(cl);
+		request_done(cl);
 		close(fd);
 		return;
 	}
@@ -627,7 +627,7 @@ static void uh_file_request(struct client *cl, const char *url,
 	}
 
 error:
-	uh_client_error(cl, 403, "Forbidden",
+	send_client_error(cl, 403, "Forbidden",
 			"You don't have permission to access %s on this server.",
 			url);
 }
@@ -821,5 +821,5 @@ void uh_handle_request(struct client *cl)
 			return;
 	}
 
-	uh_client_error(cl, 404, "Not Found", "The requested URL %s was not found on this server.", url);
+	send_client_error(cl, 404, "Not Found", "The requested URL %s was not found on this server.", url);
 }

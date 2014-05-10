@@ -181,12 +181,12 @@ static void proc_close_fds(struct client *cl)
 static void proc_handle_close(struct relay *r, int ret)
 {
 	if (r->header_cb) {
-		uh_client_error(r->cl, 502, "Bad Gateway",
+		send_client_error(r->cl, 502, "Bad Gateway",
 				"The process did not produce any response");
 		return;
 	}
 
-	uh_request_done(r->cl);
+	request_done(r->cl);
 }
 
 static void proc_handle_header(struct relay *r, const char *name, const char *val)

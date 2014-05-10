@@ -19,6 +19,7 @@
 
 #include <libubox/blobmsg.h>
 #include "uhttpd.h"
+#include "client.h"
 
 static LIST_HEAD(interpreters);
 
@@ -68,14 +69,14 @@ static void cgi_handle_request(struct client *cl, char *url, struct path_info *p
 	unsigned int mode = S_IFREG | S_IXOTH;
 
 	if (!pi->ip && !((pi->stat.st_mode & mode) == mode)) {
-		uh_client_error(cl, 403, "Forbidden",
+		send_client_error(cl, 403, "Forbidden",
 				"You don't have permission to access %s on this server.",
 				url);
 		return;
 	}
 
 	if (!uh_create_process(cl, pi, url, cgi_main)) {
-		uh_client_error(cl, 500, "Internal Server Error",
+		send_client_error(cl, 500, "Internal Server Error",
 				"Failed to create CGI process: %s", strerror(errno));
 		return;
 	}

@@ -43,6 +43,7 @@ const char * const http_methods[] = {
 	[UH_HTTP_MSG_GET] = "GET",
 	[UH_HTTP_MSG_POST] = "POST",
 	[UH_HTTP_MSG_HEAD] = "HEAD",
+	[UH_HTTP_MSG_PUT] = "PUT",
 };
 
 /**
@@ -77,15 +78,22 @@ void write_http_header(struct client *cl, int code, const char *summary)
 		ustream_printf(cl->us, "Keep-Alive: timeout=%d\r\n", KEEP_ALIVE_TIME);
 }
 
-
-static void uh_connection_close(struct client *cl)
+/**
+ * Close this client connection
+ * @client the client to close the connection from
+ */
+static void close_connection(struct client *cl)
 {
 	cl->state = CLIENT_STATE_CLOSE;
 	cl->us->eof = true;
 	ustream_state_change(cl->us);
 }
 
-static void uh_dispatch_done(struct client *cl)
+/**
+ * Free the dispatch method resources
+ * @client the client to free the resources from
+ */
+static void dispatch_done(struct client *cl)
 {
 	if (cl->dispatch.free)
 		cl->dispatch.free(cl);
@@ -93,74 +101,125 @@ static void uh_dispatch_done(struct client *cl)
 		cl->dispatch.req_free(cl);
 }
 
-static void client_timeout(struct uloop_timeout *timeout)
+/**
+ * This function is called when a client times out. The connection
+ * should then be closed.
+ * @timeout: the timeout event from the uloop event loop
+ */
+static void timeout_event_handler(struct uloop_timeout *timeout)
 {
+	/* Get the client that caused the timeout event */
 	struct client *cl = container_of(timeout, struct client, timeout);
 
-	cl->state = CLIENT_STATE_CLOSE;
-	uh_connection_close(cl);
+	/* Close the connection */
+	close_connection(cl);
 }
 
-static void uh_set_client_timeout(struct client *cl, int timeout)
+/**
+ * This handler should be installed on the event loop timeout event
+ * when a keepalive connections is used. It wil keep the connection
+ * open when needed and close when real timeout has happened.
+ * @timeout: the timeout event from the uloop event loop
+ */
+static void polling_event_handler(struct uloop_timeout *timeout)
 {
-	cl->timeout.cb = client_timeout;
-	uloop_timeout_set(&cl->timeout, timeout * 1000);
-}
-
-static void uh_keepalive_poll_cb(struct uloop_timeout *timeout)
-{
+	/* Get the client that caused the timeout event */
 	struct client *cl = container_of(timeout, struct client, timeout);
-	int sec = cl->requests > 0 ? conf.http_keepalive : conf.network_timeout;
 
-	uh_set_client_timeout(cl, sec);
+	/* Set timeout when the client had made request, network timeout otherwise */
+	int msec = cl->requests > 0 ? KEEP_ALIVE_TIME : NETWORK_TIMEOUT;
+
+	/* Install closing event handler on the connection */
+	cl->timeout.cb = timeout_event_handler;
+	uloop_timeout_set(&cl->timeout, msec * 1000);
 	cl->us->notify_read(cl->us, 0);
 }
 
-static void uh_poll_connection(struct client *cl)
+/**
+ * Poll the connection to keep it alive
+ */
+static void poll_connection(struct client *cl)
 {
-	cl->timeout.cb = uh_keepalive_poll_cb;
+	/* Install polling event handler on the connection */
+	cl->timeout.cb = polling_event_handler;
 	uloop_timeout_set(&cl->timeout, 1);
 }
 
-void uh_request_done(struct client *cl)
+/**
+ * Signal a request is done and set the connection to wait
+ * for another request from the client.
+ * @cl the client from which the request is done
+ */
+void request_done(struct client *cl)
 {
+	/* Send EOF to client and free dispatch resources */
 	uh_chunk_eof(cl);
-	uh_dispatch_done(cl);
+	dispatch_done(cl);
+
+	/* Set the dispatch pointers to zero */
 	memset(&cl->dispatch, 0, sizeof(cl->dispatch));
 
-	if (!conf.http_keepalive || cl->request.connection_close)
-		return uh_connection_close(cl);
-
-	cl->state = CLIENT_STATE_INIT;
-	cl->requests++;
-	uh_poll_connection(cl);
+	/* If this is no Keep-Alive connection close it */
+	if (!KEEP_ALIVE_TIME || cl->request.connection_close){
+		close_connection(cl);
+	} else {
+		/* Else wait for new requests and poll the connection to keep it alive */
+		cl->state = CLIENT_STATE_INIT;
+		cl->requests++;
+		poll_connection(cl);
+	}
 }
 
-void __printf(4, 5)
-uh_client_error(struct client *cl, int code, const char *summary, const char *fmt, ...)
+/**
+ * Send an error message to the browser
+ * @cl the client to send the error message to
+ * @code the error code to write to the client
+ * @summary the code description, for example code = 500, summary = "Internal Server Error"
+ * @fmt optional error information
+ */
+void __printf(4, 5) send_client_error(struct client *cl, int code, const char *summary, const char *fmt, ...)
 {
 	va_list arg;
 
+	/* Write the header with the error code */
 	write_http_header(cl, code, summary);
+
+	/* Set the content type to html */
 	ustream_printf(cl->us, "Content-Type: text/html\r\n\r\n");
 
+	/* Send the code summary in heading */
 	uh_chunk_printf(cl, "<h1>%s</h1>", summary);
 
+	/* If there is optional info send it */
 	if (fmt) {
 		va_start(arg, fmt);
 		uh_chunk_vprintf(cl, fmt, arg);
 		va_end(arg);
 	}
 
-	uh_request_done(cl);
+	/* End the request */
+	request_done(cl);
 }
 
-static void uh_header_error(struct client *cl, int code, const char *summary)
+/**
+ * Handle header errors.
+ * @cl the client that send wrong headers
+ * @code the error code
+ * @summary the code description
+ */
+static void header_error(struct client *cl, int code, const char *summary)
 {
-	uh_client_error(cl, code, summary, NULL);
-	uh_connection_close(cl);
+	send_client_error(cl, code, summary, NULL);
+	close_connection(cl);
 }
 
+/**
+ * This helper method is used to find the index of the http_methods
+ * and http_version enums from the header string.
+ * @list the list of possible strings
+ * @max the length of the list to search in
+ * @str the string to search in
+ */
 static int find_idx(const char * const *list, int max, const char *str)
 {
 	int i;
@@ -172,34 +231,51 @@ static int find_idx(const char * const *list, int max, const char *str)
 	return -1;
 }
 
-static int client_parse_request(struct client *cl, char *data)
+/**
+ * Parse an incoming client request. This is installed as a handler
+ * @cl: the client that sent the request
+ * @data: the request data
+ */
+static int parse_client_request(struct client *cl, char *data)
 {
 	struct http_request *req = &cl->request;
 	char *type, *path, *version;
 	int h_method, h_version;
 
+	printf("Raw header: %s\r\n", data);
+
+	/* Split the the data on spaces */
 	type = strtok(data, " ");
 	path = strtok(NULL, " ");
 	version = strtok(NULL, " ");
 	if (!type || !path || !version)
 		return CLIENT_STATE_DONE;
 
+	/* Add the path to the client header */
 	blobmsg_add_string(&cl->hdr, "URL", path);
 
+	/* Clear the previous request info from the client */
 	memset(&cl->request, 0, sizeof(cl->request));
+
+	/* Find the enums corresponding to the method and type */
 	h_method = find_idx(http_methods, ARRAY_SIZE(http_methods), type);
 	h_version = find_idx(http_versions, ARRAY_SIZE(http_versions), version);
+
+	/* Check if the method is supported */
 	if (h_method < 0 || h_version < 0) {
 		req->version = UH_HTTP_VER_1_0;
 		return CLIENT_STATE_DONE;
 	}
 
+	/* Save the http method en version */
 	req->method = h_method;
 	req->version = h_version;
-	if (req->version < UH_HTTP_VER_1_1 || req->method == UH_HTTP_MSG_POST ||
-	    !conf.http_keepalive)
+
+	/* Close connection when needed */
+	if (req->version < UH_HTTP_VER_1_1 || req->method == UH_HTTP_MSG_POST || !conf.http_keepalive)
 		req->connection_close = true;
 
+	/* Set the state as header parsed */
 	return CLIENT_STATE_HEADER;
 }
 
@@ -218,10 +294,10 @@ static bool client_init_cb(struct client *cl, char *buf, int len)
 
 	*newline = 0;
 	blob_buf_init(&cl->hdr, 0);
-	cl->state = client_parse_request(cl, buf);
+	cl->state = parse_client_request(cl, buf);
 	ustream_consume(cl->us, newline + 2 - buf);
 	if (cl->state == CLIENT_STATE_DONE)
-		uh_header_error(cl, 400, "Bad Request");
+		header_error(cl, 400, "Bad Request");
 
 	return true;
 }
@@ -234,7 +310,7 @@ static bool rfc1918_filter_check(struct client *cl)
 	if (!uh_addr_rfc1918(&cl->peer_addr) || uh_addr_rfc1918(&cl->srv_addr))
 		return true;
 
-	uh_client_error(cl, 403, "Forbidden",
+	send_client_error(cl, 403, "Forbidden",
 			"Rejected request from RFC1918 IP "
 			"to public server address");
 	return false;
@@ -294,13 +370,13 @@ static void client_parse_header(struct client *cl, char *data)
 		if (!strcasecmp(val, "100-continue"))
 			r->expect_cont = true;
 		else {
-			uh_header_error(cl, 412, "Precondition Failed");
+			header_error(cl, 412, "Precondition Failed");
 			return;
 		}
 	} else if (!strcmp(data, "content-length")) {
 		r->content_length = strtoul(val, &err, 0);
 		if (err && *err) {
-			uh_header_error(cl, 400, "Bad Request");
+			header_error(cl, 400, "Bad Request");
 			return;
 		}
 	} else if (!strcmp(data, "transfer-encoding")) {
@@ -470,7 +546,7 @@ void uh_client_read_cb(struct client *cl)
 		if (!read_cbs[cl->state](cl, str, len)) {
 			if (len == us->r.buffer_len &&
 			    cl->state != CLIENT_STATE_DATA)
-				uh_header_error(cl, 413, "Request Entity Too Large");
+				header_error(cl, 413, "Request Entity Too Large");
 			break;
 		}
 	} while (!client_done);
@@ -485,7 +561,7 @@ static void client_close(struct client *cl)
 
 	client_done = true;
 	n_clients--;
-	uh_dispatch_done(cl);
+	dispatch_done(cl);
 	uloop_timeout_cancel(&cl->timeout);
 	if (cl->tls)
 		uh_tls_client_detach(cl);
@@ -586,7 +662,7 @@ bool uh_accept_client(int fd, bool tls)
 	cl->us->string_data = true;
 	ustream_fd_init(&cl->sfd, sfd);
 
-	uh_poll_connection(cl);
+	poll_connection(cl);
 	list_add_tail(&cl->list, &clients);
 
 	next_client = NULL;

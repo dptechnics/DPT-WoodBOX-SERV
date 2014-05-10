@@ -31,7 +31,7 @@ static void write_response(struct client *cl)
 		
 		/* Request is done when all data is written */
 		if (!r) {
-			uh_request_done(cl);
+			request_done(cl);
 			return;
 		}
 
@@ -67,7 +67,7 @@ bool handle_request(struct client *cl, char *url) {
 
 	/* send body */
 	if (cl->request.method == UH_HTTP_MSG_HEAD) {
-		uh_request_done(cl);
+		request_done(cl);
 		return true;
 	}
 
