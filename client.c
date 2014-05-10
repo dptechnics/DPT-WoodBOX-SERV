@@ -242,8 +242,6 @@ static int parse_client_request(struct client *cl, char *data)
 	char *type, *path, *version;
 	int h_method, h_version;
 
-	printf("Raw header: %s\r\n", data);
-
 	/* Split the the data on spaces */
 	type = strtok(data, " ");
 	path = strtok(NULL, " ");
@@ -279,23 +277,34 @@ static int parse_client_request(struct client *cl, char *data)
 	return CLIENT_STATE_HEADER;
 }
 
-static bool client_init_cb(struct client *cl, char *buf, int len)
+/**
+ * This function is called when a client makes a new request
+ */
+static bool client_init_handler(struct client *cl, char *buf, int len)
 {
 	char *newline;
 
+	printf("%s", buf);
+
+	/* Get the first newline in the the header, if there is no newlien
+	 * the header is faulty */
 	newline = strstr(buf, "\r\n");
 	if (!newline)
 		return false;
 
+	/* If the buffer only contains a newline, consume them */
 	if (newline == buf) {
 		ustream_consume(cl->us, 2);
 		return true;
 	}
 
+	/* Parse the header in the buffer and consume the stream */
 	*newline = 0;
 	blob_buf_init(&cl->hdr, 0);
 	cl->state = parse_client_request(cl, buf);
 	ustream_consume(cl->us, newline + 2 - buf);
+
+	/* Return an error when the header is malformed */
 	if (cl->state == CLIENT_STATE_DONE)
 		header_error(cl, 400, "Bad Request");
 
@@ -523,7 +532,7 @@ static bool client_header_cb(struct client *cl, char *buf, int len)
 
 typedef bool (*read_cb_t)(struct client *cl, char *buf, int len);
 static read_cb_t read_cbs[] = {
-	[CLIENT_STATE_INIT] = client_init_cb,
+	[CLIENT_STATE_INIT] = client_init_handler,
 	[CLIENT_STATE_HEADER] = client_header_cb,
 	[CLIENT_STATE_DATA] = client_data_cb,
 };
