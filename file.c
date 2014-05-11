@@ -35,10 +35,7 @@
 #include "config.h"
 #include "api.h"
 
-static LIST_HEAD(index_files);
-static LIST_HEAD(dispatch_handlers);
 static LIST_HEAD(pending_requests);
-static int n_requests;
 
 struct deferred_request {
 	struct list_head list;
@@ -46,11 +43,6 @@ struct deferred_request {
 	struct client *cl;
 	struct path_info pi;
 	bool called, path;
-};
-
-struct index_file {
-	struct list_head list;
-	const char *name;
 };
 
 enum file_hdr {
@@ -629,136 +621,6 @@ error:
 			url);
 }
 
-void uh_dispatch_add(struct dispatch_handler *d)
-{
-	list_add_tail(&d->list, &dispatch_handlers);
-}
-
-/**
- * Dispatch based on the dispatch handler
- */
-static struct dispatch_handler *dispatch_find(const char *url, struct path_info *pi)
-{
-	struct dispatch_handler *d;
-
-	list_for_each_entry(d, &dispatch_handlers, list) {
-		if (pi) {
-			if (d->check_url)
-				continue;
-
-			if (d->check_path(pi, url))
-				return d;
-		} else {
-			if (d->check_path)
-				continue;
-
-			if (d->check_url(url))
-				return d;
-		}
-	}
-
-	return NULL;
-}
-
-static void uh_invoke_script(struct client *cl, struct dispatch_handler *d, struct path_info *pi)
-{
-	char *url = blobmsg_data(blob_data(cl->hdr.head));
-
-	n_requests++;
-	d->handle_request(cl, url, pi);
-}
-
-static void uh_complete_request(struct client *cl)
-{
-	struct deferred_request *dr;
-
-	n_requests--;
-
-	while (!list_empty(&pending_requests)) {
-		if (n_requests >= conf.max_script_requests)
-			return;
-
-		dr = list_first_entry(&pending_requests, struct deferred_request, list);
-		list_del(&dr->list);
-
-		dr->called = true;
-		uh_invoke_script(dr->cl, dr->d, dr->path ? &dr->pi : NULL);
-	}
-}
-
-
-static void
-uh_free_pending_request(struct client *cl)
-{
-	struct deferred_request *dr = cl->dispatch.req_data;
-
-	if (dr->called)
-		uh_complete_request(cl);
-	else
-		list_del(&dr->list);
-	free(dr);
-}
-
-static int field_len(const char *ptr)
-{
-	if (!ptr)
-		return 0;
-
-	return strlen(ptr) + 1;
-}
-
-#define path_info_fields \
-	_field(root) \
-	_field(phys) \
-	_field(name) \
-	_field(info) \
-	_field(query) \
-	_field(auth)
-
-static void
-uh_defer_script(struct client *cl, struct dispatch_handler *d, struct path_info *pi)
-{
-	struct deferred_request *dr;
-	char *_root, *_phys, *_name, *_info, *_query, *_auth;
-
-	cl->dispatch.req_free = uh_free_pending_request;
-
-	if (pi) {
-		/* allocate enough memory to duplicate all path_info strings in one block */
-#undef _field
-#define _field(_name) &_##_name, field_len(pi->_name),
-		dr = calloc_a(sizeof(*dr), path_info_fields NULL);
-
-		memcpy(&dr->pi, pi, sizeof(*pi));
-		dr->path = true;
-
-		/* copy all path_info strings */
-#undef _field
-#define _field(_name) if (pi->_name) dr->pi._name = strcpy(_##_name, pi->_name);
-		path_info_fields
-	} else {
-		dr = calloc(1, sizeof(*dr));
-	}
-
-	cl->dispatch.req_data = dr;
-	dr->cl = cl;
-	dr->d = d;
-	list_add(&dr->list, &pending_requests);
-}
-
-static void
-uh_invoke_handler(struct client *cl, struct dispatch_handler *d, char *url, struct path_info *pi)
-{
-	if (!d->script)
-		return d->handle_request(cl, url, pi);
-
-	if (n_requests >= conf.max_script_requests)
-		return uh_defer_script(cl, d, pi);
-
-	cl->dispatch.req_free = uh_complete_request;
-	uh_invoke_script(cl, d, pi);
-}
-
 static bool __handle_file_request(struct client *cl, char *url)
 {
 	static const struct blobmsg_policy hdr_policy[__HDR_MAX] = {
@@ -769,7 +631,6 @@ static bool __handle_file_request(struct client *cl, char *url)
 		[HDR_IF_NONE_MATCH] = { "if-none-match", BLOBMSG_TYPE_STRING },
 		[HDR_IF_RANGE] = { "if-range", BLOBMSG_TYPE_STRING },
 	};
-	struct dispatch_handler *d;
 	struct blob_attr *tb[__HDR_MAX];
 	struct path_info *pi;
 
@@ -787,9 +648,8 @@ static bool __handle_file_request(struct client *cl, char *url)
 	if (!uh_auth_check(cl, pi))
 		return true;
 
-	d = dispatch_find(url, pi);
-	if (d)
-		uh_invoke_handler(cl, d, url, pi);
+	if (uh_path_match(DOCUMENT_ROOT API_PATH, pi->phys))
+		api_handle_request(cl, url, pi);
 	else
 		uh_file_request(cl, url, pi, tb);
 
@@ -799,15 +659,10 @@ static bool __handle_file_request(struct client *cl, char *url)
 void uh_handle_request(struct client *cl)
 {
 	struct http_request *req = &cl->request;
-	struct dispatch_handler *d;
 	char *url = blobmsg_data(blob_data(cl->hdr.head));
 	char *error_handler;
 
 	req->redirect_status = 200;
-	d = dispatch_find(url, NULL);
-	if (d)
-		return uh_invoke_handler(cl, d, url, NULL);
-
 	if (__handle_file_request(cl, url))
 		return;
 

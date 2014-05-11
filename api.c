@@ -17,7 +17,7 @@
  * @cl the client who sent the request
  * @url the request URL
  */
-static void api_handle_request(struct client *cl, char *url, struct path_info *pi) {
+void api_handle_request(struct client *cl, char *url, struct path_info *pi) {
 	printf("Handling api request\r\n");
 
 
@@ -28,7 +28,7 @@ static void api_handle_request(struct client *cl, char *url, struct path_info *p
  * @cl the client who send the request
  * @url the request url
  */
-static bool api_check_path(struct path_info *pi, const char *url) {
+bool api_check_path(struct path_info *pi, const char *url) {
 	return uh_path_match(DOCUMENT_ROOT API_PATH, pi->phys);
 }
 

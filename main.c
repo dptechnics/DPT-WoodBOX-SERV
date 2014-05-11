@@ -97,9 +97,6 @@ int main(int argc, char **argv)
  */
 bool load_configuration(void)
 {
-	/* Add cgi dispatch handler */
-	uh_dispatch_add(&api_dispatch);
-
 	/* Set up configuration */
 	conf.script_timeout = 60;
 	conf.max_script_requests = 3;
