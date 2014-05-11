@@ -16,7 +16,7 @@
  * @cl the client who sent the request
  * @url the request URL
  */
-bool api_handle_request(struct client *cl, char *url) {
+static bool api_handle_request(struct client *cl, char *url) {
 
 	return false;
 }
@@ -26,7 +26,7 @@ bool api_handle_request(struct client *cl, char *url) {
  * @cl the client who send the request
  * @url the request url
  */
-bool api_check_path(struct path_info *pi, const char *url) {
+static bool api_check_path(struct path_info *pi, const char *url) {
 	return uh_path_match(conf.cgi_docroot_path, pi->phys);
 }
 
