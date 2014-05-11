@@ -252,7 +252,6 @@ extern const char * const http_versions[];
 extern const char * const http_methods[];
 extern struct dispatch_handler cgi_dispatch;
 
-void uh_index_add(const char *filename);
 
 bool uh_use_chunked(struct client *cl);
 void uh_chunk_write(struct client *cl, const void *data, int len);

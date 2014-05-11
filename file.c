@@ -62,15 +62,9 @@ enum file_hdr {
 	__HDR_MAX
 };
 
-void uh_index_add(const char *filename)
-{
-	struct index_file *idx;
-
-	idx = calloc(1, sizeof(*idx));
-	idx->name = filename;
-	list_add_tail(&idx->list, &index_files);
-}
-
+/**
+ * Try to normalize the a path to a canonical path
+ */
 static char * canonpath(const char *path, char *path_resolved)
 {
 	const char *path_cpy = path;
@@ -123,18 +117,19 @@ next:
 	return path_resolved;
 }
 
-/* Returns NULL on error.
-** NB: improperly encoded URL should give client 400 [Bad Syntax]; returning
-** NULL here causes 404 [Not Found], but that's not too unreasonable. */
-static struct path_info *
-uh_path_lookup(struct client *cl, const char *url)
+/**
+ * Given a url this functions tries to find the physical path on the server.
+ * @cl the client that made the request
+ * @url the requested URL
+ * @return NULL on error
+ */
+static struct path_info *path_lookup(struct client *cl, const char *url)
 {
 	static char path_phys[PATH_MAX];
 	static char path_info[PATH_MAX];
 	static struct path_info p;
 
-	const char *docroot = conf.docroot;
-	int docroot_len = strlen(docroot);
+	int docroot_len = strlen(DOCUMENT_ROOT);
 	char *pathptr = NULL;
 	bool slash;
 
@@ -142,7 +137,7 @@ uh_path_lookup(struct client *cl, const char *url)
 	int len;
 	struct stat s;
 
-	/* back out early if url is undefined */
+	/* Return NULL when the URL is undefined */
 	if (url == NULL)
 		return NULL;
 
@@ -150,13 +145,14 @@ uh_path_lookup(struct client *cl, const char *url)
 	path_phys[0] = 0;
 	path_info[0] = 0;
 
-	strcpy(uh_buf, docroot);
+	/* Start the canonical path with the document root */
+	strcpy(uh_buf, DOCUMENT_ROOT);
 
-	/* separate query string from url */
+	/* Separate query string from url */
 	if ((pathptr = strchr(url, '?')) != NULL) {
 		p.query = pathptr[1] ? pathptr + 1 : NULL;
 
-		/* urldecode component w/o query */
+		/* URL decode component without query */
 		if (pathptr > url) {
 			if (uh_urldecode(&uh_buf[docroot_len],
 					 sizeof(uh_buf) - docroot_len - 1,
@@ -165,13 +161,13 @@ uh_path_lookup(struct client *cl, const char *url)
 		}
 	}
 
-	/* no query string, decode all of url */
+	/* Decode the full url when  there is no querystring */
 	else if (uh_urldecode(&uh_buf[docroot_len],
 			      sizeof(uh_buf) - docroot_len - 1,
 			      url, strlen(url) ) < 0)
 		return NULL;
 
-	/* create canon path */
+	/* Create canonical path */
 	len = strlen(uh_buf);
 	slash = len && uh_buf[len - 1] == '/';
 	len = min(len, sizeof(path_phys) - 1);
@@ -190,7 +186,7 @@ uh_path_lookup(struct client *cl, const char *url)
 		if (!exists)
 			continue;
 
-		/* test current path */
+		/* Test the current path */
 		if (stat(path_phys, &p.stat))
 			continue;
 
@@ -198,21 +194,22 @@ uh_path_lookup(struct client *cl, const char *url)
 		break;
 	}
 
-	/* check whether found path is within docroot */
-	if (strncmp(path_phys, docroot, docroot_len) != 0 ||
+	/* Check whether found path is within docroot */
+	if (strncmp(path_phys, DOCUMENT_ROOT, docroot_len) != 0 ||
 	    (path_phys[docroot_len] != 0 &&
 	     path_phys[docroot_len] != '/'))
 		return NULL;
 
-	/* is a regular file */
+	/* Check if the found file is a regular file */
 	if (p.stat.st_mode & S_IFREG) {
-		p.root = docroot;
+		p.root = DOCUMENT_ROOT;
 		p.phys = path_phys;
 		p.name = &path_phys[docroot_len];
 		p.info = path_info[0] ? path_info : NULL;
 		return &p;
 	}
 
+	/* Make sure it is not a directory */
 	if (!(p.stat.st_mode & S_IFDIR))
 		return NULL;
 
@@ -248,18 +245,22 @@ uh_path_lookup(struct client *cl, const char *url)
 	if (!stat(path_phys, &s) && (s.st_mode & S_IFREG)) {
 		memcpy(&p.stat, &s, sizeof(p.stat));
 	}
-
+	/* Ensure null termination */
 	*pathptr = 0;
 
-
-	p.root = docroot;
+	p.root = DOCUMENT_ROOT;
 	p.phys = path_phys;
 	p.name = &path_phys[docroot_len];
 
 	return p.phys ? &p : NULL;
 }
 
-static const char * uh_file_mime_lookup(const char *path)
+/**
+ * Lookup the mimetype of a file based on the file extension
+ * @path the full filepath
+ * @return "application/octet-stream" when a mimetype could not be found
+ */
+static const char * file_mime_lookup(const char *path)
 {
 	const struct mimetype *m = &uh_mime_types[0];
 	const char *e;
@@ -270,17 +271,18 @@ static const char * uh_file_mime_lookup(const char *path)
 		while (e >= path) {
 			if ((*e == '.' || *e == '/') && !strcasecmp(&e[1], m->extn))
 				return m->mime;
-
-			e--;
+			--e;
 		}
-
-		m++;
+		++m;
 	}
 
 	return "application/octet-stream";
 }
 
-static const char * uh_file_mktag(struct stat *s, char *buf, int len)
+/**
+ * Create an etag for the file
+ */
+static const char * make_file_etag(struct stat *s, char *buf, int len)
 {
 	snprintf(buf, len, "\"%x-%x-%x\"",
 			 (unsigned int) s->st_ino,
@@ -324,7 +326,7 @@ static void uh_file_response_ok_hdrs(struct client *cl, struct stat *s)
 	char buf[128];
 
 	if (s) {
-		ustream_printf(cl->us, "ETag: %s\r\n", uh_file_mktag(s, buf, sizeof(buf)));
+		ustream_printf(cl->us, "ETag: %s\r\n", make_file_etag(s, buf, sizeof(buf)));
 		ustream_printf(cl->us, "Last-Modified: %s\r\n",
 			       uh_file_unix2date(s->st_mtime, buf, sizeof(buf)));
 	}
@@ -353,7 +355,7 @@ static void uh_file_response_412(struct client *cl)
 static bool uh_file_if_match(struct client *cl, struct stat *s)
 {
 	char buf[128];
-	const char *tag = uh_file_mktag(s, buf, sizeof(buf));
+	const char *tag = make_file_etag(s, buf, sizeof(buf));
 	char *hdr = uh_file_header(cl, HDR_IF_MATCH);
 	char *p;
 	int i;
@@ -394,7 +396,7 @@ static int uh_file_if_modified_since(struct client *cl, struct stat *s)
 static int uh_file_if_none_match(struct client *cl, struct stat *s)
 {
 	char buf[128];
-	const char *tag = uh_file_mktag(s, buf, sizeof(buf));
+	const char *tag = make_file_etag(s, buf, sizeof(buf));
 	char *hdr = uh_file_header(cl, HDR_IF_NONE_MATCH);
 	char *p;
 	int i;
@@ -483,7 +485,7 @@ static void list_entries(struct client *cl, struct dirent **files, int count,
 		if (!dir) {
 			suffix = "";
 			mode = S_IROTH;
-			type = uh_file_mime_lookup(local_path);
+			type = file_mime_lookup(local_path);
 		}
 
 		if (!(s.st_mode & mode))
@@ -573,7 +575,7 @@ static void uh_file_data(struct client *cl, struct path_info *pi, int fd)
 	uh_file_response_200(cl, &pi->stat);
 
 	ustream_printf(cl->us, "Content-Type: %s\r\n",
-			   uh_file_mime_lookup(pi->name));
+			file_mime_lookup(pi->name));
 
 	ustream_printf(cl->us, "Content-Length: %i\r\n\r\n",
 			   pi->stat.st_size);
@@ -631,6 +633,9 @@ void uh_dispatch_add(struct dispatch_handler *d)
 	list_add_tail(&d->list, &dispatch_handlers);
 }
 
+/**
+ * Dispatch based on the dispatch handler
+ */
 static struct dispatch_handler *dispatch_find(const char *url, struct path_info *pi)
 {
 	struct dispatch_handler *d;
@@ -767,7 +772,7 @@ static bool __handle_file_request(struct client *cl, char *url)
 	struct blob_attr *tb[__HDR_MAX];
 	struct path_info *pi;
 
-	pi = uh_path_lookup(cl, url);
+	pi = path_lookup(cl, url);
 	if (!pi)
 		return false;
 
