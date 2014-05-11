@@ -18,5 +18,5 @@
  */
 bool api_handle_request(struct client *cl, char *url) {
 
-
+	return false;
 }
