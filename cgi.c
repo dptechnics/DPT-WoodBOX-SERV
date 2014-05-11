@@ -46,12 +46,7 @@ static void cgi_main(struct client *cl, struct path_info *pi, char *url)
 	clearenv();
 	setenv("PATH", conf.cgi_path, 1);
 
-	for (var = get_process_vars(cl, pi); var->name; var++) {
-		if (var->value)
-			setenv(var->name, var->value, 1);
-			printf("variable: %s => %s\r\n", var->name, var->value);
 
-	}
 
 	chdir(pi->root);
 
@@ -70,6 +65,7 @@ static void cgi_handle_request(struct client *cl, char *url, struct path_info *p
 	unsigned int mode = S_IFREG | S_IXOTH;
 
 	printf("Handling cgi request\r\n");
+	struct env_var *var;
 
 	if (!pi->ip && !((pi->stat.st_mode & mode) == mode)) {
 		send_client_error(cl, 403, "Forbidden",
@@ -77,6 +73,13 @@ static void cgi_handle_request(struct client *cl, char *url, struct path_info *p
 				url);
 		return;
 	}
+
+	for (var = get_process_vars(cl, pi); var->name; var++) {
+			if (var->value)
+				setenv(var->name, var->value, 1);
+				printf("variable: %s => %s\r\n", var->name, var->value);
+
+		}
 
 	if (!uh_create_process(cl, pi, url, cgi_main)) {
 		send_client_error(cl, 500, "Internal Server Error",
