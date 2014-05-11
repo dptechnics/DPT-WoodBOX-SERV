@@ -41,11 +41,16 @@ void uh_interpreter_add(const char *ext, const char *path)
 static void cgi_main(struct client *cl, struct path_info *pi, char *url)
 {
 	const struct interpreter *ip = pi->ip;
+	struct env_var *var;
 
 	clearenv();
 	setenv("PATH", conf.cgi_path, 1);
 
+	for (var = get_process_vars(cl, pi); var->name; var++) {
+			if (var->value)
+				setenv(var->name, var->value, 1);
 
+		}
 
 	chdir(pi->root);
 
