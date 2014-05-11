@@ -14,8 +14,6 @@
 
 static void handle_chunk_write(struct client *cl)
 {
-	int r;
-
 	while (cl->us->w.data_bytes < 256) {
 
 		uh_chunk_write(cl, cl->response, strlen(cl->response));
