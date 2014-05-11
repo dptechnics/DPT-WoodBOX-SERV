@@ -14,12 +14,26 @@
 
 static void handle_chunk_write(struct client *cl)
 {
+	char *chunk;
+	int len;
+	int r;
+	len = strlen(cl->response);
+
 	while (cl->us->w.data_bytes < 256) {
+		r = len > sizeof(uh_buf) ? sizeof(uh_buf) : len;
+		r = strncpy(uh_buf, cl->response, r);
 
-		uh_chunk_write(cl, cl->response, strlen(cl->response));
+		if (r < 0) {
+			if (errno == EINTR)
+				continue;
+		}
 
-		request_done(cl);
-		return;
+		if (!r) {
+			request_done(cl);
+			return;
+		}
+
+		uh_chunk_write(cl, uh_buf, r);
 	}
 }
 
