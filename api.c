@@ -16,9 +16,8 @@
  * @cl the client who sent the request
  * @url the request URL
  */
-static bool api_handle_request(struct client *cl, char *url, struct path_info *pi) {
+static void api_handle_request(struct client *cl, char *url, struct path_info *pi) {
 
-	return false;
 }
 
 /**
