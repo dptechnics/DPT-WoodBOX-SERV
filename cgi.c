@@ -42,6 +42,8 @@ static void cgi_main(struct client *cl, struct path_info *pi, char *url)
 	const struct interpreter *ip = pi->ip;
 	struct env_var *var;
 
+	printf("executing cgi script\r\n");
+
 	clearenv();
 	setenv("PATH", conf.cgi_path, 1);
 
