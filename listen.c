@@ -18,6 +18,7 @@
 
 #include "listen.h"
 #include "uhttpd.h"
+#include "client.h"
 
 /**
  * Listener structure
