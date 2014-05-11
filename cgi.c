@@ -42,6 +42,8 @@ static void cgi_main(struct client *cl, struct path_info *pi, char *url)
 {
 	const struct interpreter *ip = pi->ip;
 	struct env_var *var;
+	int len;
+	char *postdata;
 
 	clearenv();
 	setenv("PATH", conf.cgi_path, 1);
@@ -52,6 +54,11 @@ static void cgi_main(struct client *cl, struct path_info *pi, char *url)
 
 		}
 
+	len = strtol(getenv("CONTENT_LENGTH"), NULL, 10);
+	postdata = (char*) malloc(len+1);
+	fgets(postdata, len+1, stdin);
+	printf("%s",postdata);
+	free(postdata);
 	chdir(pi->root);
 
 	if (ip)
