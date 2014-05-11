@@ -20,7 +20,7 @@ static void handle_chunk_write(struct client *cl)
 
 	while (cl->us->w.data_bytes < 256) {
 		r = len > sizeof(uh_buf) ? sizeof(uh_buf) : len;
-		r = strncpy(uh_buf, cl->response, r);
+		strncpy(uh_buf, cl->response, r);
 
 		if (r < 0) {
 			if (errno == EINTR)
