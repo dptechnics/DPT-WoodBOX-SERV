@@ -14,7 +14,6 @@
 
 static void handle_chunk_write(struct client *cl)
 {
-	char *chunk;
 	int len;
 	int r;
 	len = strlen(cl->response);
