@@ -104,7 +104,7 @@ bool load_configuration(void)
 	conf.max_script_requests = 3;
 	conf.max_connections = 100;
 	conf.realm = "WoodBox Secured";
-	conf.cgi_prefix = "/api";
+	conf.cgi_docroot_path = "/www/api";
 	conf.cgi_path = "/sbin:/usr/sbin:/bin:/usr/bin";
 
 	/* Bind a non TLS socket to port 80 */
@@ -112,11 +112,6 @@ bool load_configuration(void)
 		fprintf(stderr, "[ERROR] Could not bind socket to 0.0.0.0:80\n");
 		return false;
 	}
-
-	char *str = malloc(strlen(DOCUMENT_ROOT) + strlen(conf.cgi_prefix) + 1);
-	strcpy(str,DOCUMENT_ROOT);
-	strcat(str, conf.cgi_prefix);
-	conf.cgi_docroot_path = str;
 
 	/* Add interpreter */
 	uh_interpreter_add(".sh", "/bin/sh");

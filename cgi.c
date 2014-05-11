@@ -47,10 +47,10 @@ static void cgi_main(struct client *cl, struct path_info *pi, char *url)
 	setenv("PATH", conf.cgi_path, 1);
 
 	for (var = get_process_vars(cl, pi); var->name; var++) {
-		if (!var->value)
-			continue;
+		if (var->value)
+			setenv(var->name, var->value, 1);
+			printf("variable: %s => %s\r\n", var->name, var->value);
 
-		setenv(var->name, var->value, 1);
 	}
 
 	chdir(pi->root);

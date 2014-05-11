@@ -4,7 +4,12 @@
 #include <sys/types.h>
 
 #include "uhttpd.h"
- 
-bool handle_request(struct client *cl, char *url);
+
+/**
+ * Handle api requests
+ * @cl the client who sent the request
+ * @url the request URL
+ */
+bool api_handle_request(struct client *cl, char *url);
  
 #endif
