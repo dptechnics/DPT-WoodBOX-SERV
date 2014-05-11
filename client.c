@@ -439,8 +439,8 @@ static void client_parse_header(struct client *cl, char *data)
 }
 
 /**
- * Retreive client post data
- * @cl the client who sent de data
+ * Retreive client post data.
+ * @cl the client who sent de data.
  */
 void client_post_data(struct client *cl)
 {
@@ -496,7 +496,6 @@ void client_post_data(struct client *cl)
 
 		/* Nullterminate the string */
 		*sep = 0;
-		printf("Post data separator: %s", sep);
 
 		r->content_length = strtoul(buf + offset, &sep, 16);
 		r->transfer_chunked++;
@@ -526,25 +525,45 @@ void client_post_data(struct client *cl)
 	}
 }
 
+/**
+ * Handler called for POST data
+ * @cl the client who sent the data
+ * @buf the buffer containing the data
+ * @len the length of the data
+ */
 static bool client_data_handler(struct client *cl, char *buf, int len)
 {
 	client_post_data(cl);
 	return false;
 }
 
-static bool client_header_cb(struct client *cl, char *buf, int len)
+/**
+ * Handler called when the header should be parsed.
+ * @cl the client whos sent the header.
+ * @buf the buffer containing the header.
+ * @len the length of the buffer.
+ */
+static bool client_header_handler(struct client *cl, char *buf, int len)
 {
 	char *newline;
 	int line_len;
 
+	/* Get the first line of the data until a newline */
 	newline = strstr(buf, "\r\n");
 	if (!newline)
 		return false;
 
+	/* Nullterminate the string */
 	*newline = 0;
+
+	/* Parse the header */
 	client_parse_header(cl, buf);
+
+	/* Consume the line in the stream */
 	line_len = newline + 2 - buf;
 	ustream_consume(cl->us, line_len);
+
+	/* Parse client data if there is any */
 	if (cl->state == CLIENT_STATE_DATA)
 		return client_data_handler(cl, newline + 2, len - line_len);
 
@@ -553,12 +572,17 @@ static bool client_header_cb(struct client *cl, char *buf, int len)
 
 typedef bool (*read_cb_t)(struct client *cl, char *buf, int len);
 static read_cb_t read_cbs[] = {
-	[CLIENT_STATE_INIT] = client_init_handler,
-	[CLIENT_STATE_HEADER] = client_header_cb,
-	[CLIENT_STATE_DATA] = client_data_handler,
+	[CLIENT_STATE_INIT] 	= client_init_handler,
+	[CLIENT_STATE_HEADER] 	= client_header_handler,
+	[CLIENT_STATE_DATA] 	= client_data_handler,
 };
 
-void uh_client_read_cb(struct client *cl)
+/**
+ * Read data from client. Read the request and parse
+ * all headers and data.
+ * @cl the client to read from.
+ */
+void read_from_client(struct client *cl)
 {
 	struct ustream *us = cl->us;
 	char *str;
@@ -566,6 +590,7 @@ void uh_client_read_cb(struct client *cl)
 
 	client_done = false;
 	do {
+		/* Read sata if there is any */
 		str = ustream_get_read_buf(us, &len);
 		if (!str || !len)
 			break;
@@ -573,6 +598,7 @@ void uh_client_read_cb(struct client *cl)
 		if (cl->state >= array_size(read_cbs) || !read_cbs[cl->state])
 			break;
 
+		/* Call different handlers and parse */
 		if (!read_cbs[cl->state](cl, str, len)) {
 			if (len == us->r.buffer_len &&
 			    cl->state != CLIENT_STATE_DATA)
@@ -582,13 +608,19 @@ void uh_client_read_cb(struct client *cl)
 	} while (!client_done);
 }
 
+/**
+ * Close the connection to the client.
+ * @cl the client to close the connection from.
+ */
 static void client_close(struct client *cl)
 {
+	/* Cleanup when necessary */
 	if (cl->refcount) {
 		cl->state = CLIENT_STATE_CLEANUP;
 		return;
 	}
 
+	/* Free all resources */
 	client_done = true;
 	n_clients--;
 	dispatch_done(cl);
@@ -601,17 +633,24 @@ static void client_close(struct client *cl)
 	blob_buf_free(&cl->hdr);
 	free(cl);
 
+	/* Unblock other listeners so pending clients can be handled */
 	unblock_listeners();
 }
 
-void uh_client_notify_state(struct client *cl)
+/**
+ * Close client if possible.
+ * @cl the client the close.
+ */
+void client_notify_state(struct client *cl)
 {
 	struct ustream *s = cl->us;
 
+	/* Do not close in cleanup or DATA state */
 	if (!s->write_error && cl->state != CLIENT_STATE_CLEANUP) {
 		if (cl->state == CLIENT_STATE_DATA)
 			return;
 
+		/* Dont close when the stream is not fully read */
 		if (!s->eof || s->w.data_bytes)
 			return;
 	}
@@ -619,14 +658,25 @@ void uh_client_notify_state(struct client *cl)
 	return client_close(cl);
 }
 
-static void client_ustream_read_cb(struct ustream *s, int bytes)
+/**
+ * Read from a ustream.
+ * @s the stream to read from.
+ * @bytes the number of bytes to read.
+ */
+static void client_ustream_read_handler(struct ustream *s, int bytes)
 {
 	struct client *cl = container_of(s, struct client, sfd.stream);
 
-	uh_client_read_cb(cl);
+	read_from_client(cl);
 }
 
-static void client_ustream_write_cb(struct ustream *s, int bytes)
+/**
+ * Call the write dispatcher installed in the client owning the stream
+ * and writes the bytes.
+ * @s the stream to write to.
+ * @bytes not used.
+ */
+static void client_ustream_write_handler(struct ustream *s, int bytes)
 {
 	struct client *cl = container_of(s, struct client, sfd.stream);
 
@@ -634,13 +684,22 @@ static void client_ustream_write_cb(struct ustream *s, int bytes)
 		cl->dispatch.write_cb(cl);
 }
 
-static void client_notify_state(struct ustream *s)
+/**
+ * Handler called to notify state.
+ * @s the stream owned by the client to notify state on.
+ */
+static void client_notify_state_handler(struct ustream *s)
 {
 	struct client *cl = container_of(s, struct client, sfd.stream);
 
-	uh_client_notify_state(cl);
+	client_notify_state(cl);
 }
 
+/**
+ * Set the address to reply to
+ * @addr the address to set
+ * @src the source address
+ */
 static void set_addr(struct uh_addr *addr, void *src)
 {
 	struct sockaddr_in *sin = src;
@@ -656,7 +715,12 @@ static void set_addr(struct uh_addr *addr, void *src)
 	}
 }
 
-bool uh_accept_client(int fd, bool tls)
+/**
+ * Accept a new client
+ * @fd the socket to accept the client on
+ * @tls true if this client has https
+ */
+bool accept_client(int fd, bool tls)
 {
 	static struct client *next_client;
 	struct client *cl;
@@ -665,11 +729,13 @@ bool uh_accept_client(int fd, bool tls)
 	static int client_id = 0;
 	struct sockaddr_in6 addr;
 
+	/* If the list has no space enlarge it with one */
 	if (!next_client)
 		next_client = calloc(1, sizeof(*next_client));
 
 	cl = next_client;
 
+	/* Set all the correct addresses */
 	sl = sizeof(addr);
 	sfd = accept(fd, (struct sockaddr *) &addr, &sl);
 	if (sfd < 0)
@@ -680,21 +746,25 @@ bool uh_accept_client(int fd, bool tls)
 	getsockname(sfd, (struct sockaddr *) &addr, &sl);
 	set_addr(&cl->srv_addr, &addr);
 
+	/* Attach all handlers */
 	cl->us = &cl->sfd.stream;
 	if (tls) {
 		uh_tls_client_attach(cl);
 	} else {
-		cl->us->notify_read = client_ustream_read_cb;
-		cl->us->notify_write = client_ustream_write_cb;
-		cl->us->notify_state = client_notify_state;
+		cl->us->notify_read = client_ustream_read_handler;
+		cl->us->notify_write = client_ustream_write_handler;
+		cl->us->notify_state = client_notify_state_handler;
 	}
 
+	/* Initialise stream for string data */
 	cl->us->string_data = true;
 	ustream_fd_init(&cl->sfd, sfd);
 
+	/* Add the client to the list and poll connection */
 	poll_connection(cl);
 	list_add_tail(&cl->list, &clients);
 
+	/* Do some administration */
 	next_client = NULL;
 	n_clients++;
 	cl->id = client_id++;
@@ -703,7 +773,10 @@ bool uh_accept_client(int fd, bool tls)
 	return true;
 }
 
-void uh_close_fds(void)
+/**
+ * Close all clients
+ */
+void close_sockets(void)
 {
 	struct client *cl;
 

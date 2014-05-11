@@ -102,7 +102,7 @@ static void new_client_event(struct uloop_fd *fd, unsigned int events)
 
 	/* Accept all clients */
 	while (1) {
-		if (!uh_accept_client(fd->fd, l->tls))
+		if (!accept_client(fd->fd, l->tls))
 			break;
 	}
 

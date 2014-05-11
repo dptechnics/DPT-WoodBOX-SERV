@@ -254,12 +254,6 @@ extern struct dispatch_handler cgi_dispatch;
 
 void uh_index_add(const char *filename);
 
-bool uh_accept_client(int fd, bool tls);
-
-void uh_unblock_listeners(void);
-void uh_setup_listeners(void);
-int uh_socket_bind(const char *host, const char *port, bool tls);
-
 bool uh_use_chunked(struct client *cl);
 void uh_chunk_write(struct client *cl, const void *data, int len);
 void uh_chunk_vprintf(struct client *cl, const char *format, va_list arg);
@@ -268,20 +262,10 @@ void __printf(2, 3)
 uh_chunk_printf(struct client *cl, const char *format, ...);
 
 void uh_chunk_eof(struct client *cl);
-void uh_request_done(struct client *cl);
-
-void __printf(4, 5)
-uh_client_error(struct client *cl, int code, const char *summary, const char *fmt, ...);
-
 void uh_handle_request(struct client *cl);
-void uh_client_read_cb(struct client *cl);
-void uh_client_notify_state(struct client *cl);
 
 void uh_auth_add(const char *path, const char *user, const char *pass);
 bool uh_auth_check(struct client *cl, struct path_info *pi);
-
-void uh_close_listen_fds(void);
-void uh_close_fds(void);
 
 void uh_interpreter_add(const char *ext, const char *path);
 void uh_dispatch_add(struct dispatch_handler *d);

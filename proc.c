@@ -348,7 +348,7 @@ bool uh_create_process(struct client *cl, struct path_info *pi, char *url,
 		close(wfd[0]);
 		close(wfd[1]);
 
-		uh_close_fds();
+		close_sockets();
 		cb(cl, pi, url);
 		exit(0);
 	}

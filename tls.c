@@ -20,6 +20,7 @@
 #include <dlfcn.h>
 #include "uhttpd.h"
 #include "tls.h"
+#include "client.h"
 
 #ifdef __APPLE__
 #define LIB_EXT "dylib"
@@ -70,7 +71,7 @@ static void tls_ustream_read_cb(struct ustream *s, int bytes)
 {
 	struct client *cl = container_of(s, struct client, ssl.stream);
 
-	uh_client_read_cb(cl);
+	read_from_client(cl);
 }
 
 static void tls_ustream_write_cb(struct ustream *s, int bytes)
@@ -85,7 +86,7 @@ static void tls_notify_state(struct ustream *s)
 {
 	struct client *cl = container_of(s, struct client, ssl.stream);
 
-	uh_client_notify_state(cl);
+	client_notify_state(cl);
 }
 
 void uh_tls_client_attach(struct client *cl)

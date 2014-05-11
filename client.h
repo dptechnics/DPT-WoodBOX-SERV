@@ -38,9 +38,34 @@ void request_done(struct client *cl);
 void __printf(4, 5) send_client_error(struct client *cl, int code, const char *summary, const char *fmt, ...);
 
 /**
- * Parse client POST data
+ * Parse client POST data.
  * @cl the client who sent de data
  */
 void client_post_data(struct client *cl);
+
+/**
+ * Read data from client. Read the request and parse
+ * all headers and data.
+ * @cl the client to read from
+ */
+void read_from_client(struct client *cl);
+
+/**
+ * Close client if possible
+ * @cl the client the close
+ */
+void client_notify_state(struct client *cl);
+
+/**
+ * Accept a new client
+ * @fd the socket to accept the client on
+ * @tls true if this client has https
+ */
+bool accept_client(int fd, bool tls);
+
+/**
+ * Close all clients
+ */
+void close_sockets(void);
 
 #endif /* CLIENT_H_ */
