@@ -42,8 +42,6 @@ static void cgi_main(struct client *cl, struct path_info *pi, char *url)
 {
 	const struct interpreter *ip = pi->ip;
 	struct env_var *var;
-	int len;
-	char *postdata;
 
 	clearenv();
 	setenv("PATH", conf.cgi_path, 1);
@@ -53,13 +51,6 @@ static void cgi_main(struct client *cl, struct path_info *pi, char *url)
 				setenv(var->name, var->value, 1);
 
 		}
-
-	len = strtol(getenv("CONTENT_LENGTH"), NULL, 10);
-	postdata = (char*) malloc(len+1);
-	fgets(postdata, len+1, stdin);
-	printf("%s",postdata);
-	free(postdata);
-	chdir(pi->root);
 
 	if (ip)
 		execl(ip->path, ip->path, pi->phys, NULL);
@@ -84,13 +75,6 @@ static void cgi_handle_request(struct client *cl, char *url, struct path_info *p
 				url);
 		return;
 	}
-
-	for (var = get_process_vars(cl, pi); var->name; var++) {
-			if (var->value)
-				setenv(var->name, var->value, 1);
-				printf("variable: %s => %s\r\n", var->name, var->value);
-
-		}
 
 	if (!uh_create_process(cl, pi, url, cgi_main)) {
 		send_client_error(cl, 500, "Internal Server Error",
@@ -121,6 +105,7 @@ static bool check_cgi_path(struct path_info *pi, const char *url)
 	}
 
 	pi->ip = NULL;
+	printf("physical: %s\r\n", pi->phys);
 	return uh_path_match(conf.cgi_docroot_path, pi->phys);
 }
 
