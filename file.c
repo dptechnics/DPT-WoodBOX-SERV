@@ -141,7 +141,6 @@ uh_path_lookup(struct client *cl, const char *url)
 	int i = 0;
 	int len;
 	struct stat s;
-	struct index_file *idx;
 
 	/* back out early if url is undefined */
 	if (url == NULL)
