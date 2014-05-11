@@ -29,6 +29,7 @@
 #include "main.h"
 #include "config.h"
 #include "uhttpd.h"
+#include "api.h"
 /**
  * The servers main working buffer.
  */
