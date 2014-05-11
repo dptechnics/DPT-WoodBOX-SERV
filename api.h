@@ -12,9 +12,4 @@
  */
 void api_handle_request(struct client *cl, char *url, struct path_info *pi);
 
-/**
- * The API dispatch handler
- */
-extern struct dispatch_handler api_dispatch;
-
 #endif
