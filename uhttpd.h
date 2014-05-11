@@ -178,26 +178,6 @@ struct dispatch_handler {
 	void (*handle_request)(struct client *cl, char *url, struct path_info *pi);
 };
 
-#ifdef HAVE_UBUS
-struct dispatch_ubus {
-	struct ubus_request req;
-
-	struct uloop_timeout timeout;
-	struct json_tokener *jstok;
-	struct json_object *jsobj;
-	struct json_object *jsobj_cur;
-	int post_len;
-
-	uint32_t obj;
-	const char *func;
-
-	struct blob_buf buf;
-	bool req_pending;
-	bool array;
-	int array_idx;
-};
-#endif
-
 struct dispatch {
 	int (*data_send)(struct client *cl, const char *data, int len);
 	void (*data_done)(struct client *cl);
@@ -243,6 +223,7 @@ struct client {
 
 	struct blob_buf hdr;
 	struct dispatch dispatch;
+	char *response;
 };
 
 extern char uh_buf[4096];

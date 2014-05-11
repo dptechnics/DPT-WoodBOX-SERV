@@ -574,7 +574,7 @@ static void uh_file_data(struct client *cl, struct path_info *pi, int fd)
 			   pi->stat.st_size);
 
 
-	/* send body */
+	/* Stop if this is a header only request */
 	if (cl->request.method == UH_HTTP_MSG_HEAD) {
 		request_done(cl);
 		close(fd);
@@ -588,8 +588,7 @@ static void uh_file_data(struct client *cl, struct path_info *pi, int fd)
 	file_write_cb(cl);
 }
 
-static void uh_file_request(struct client *cl, const char *url,
-			    struct path_info *pi, struct blob_attr **tb)
+static void uh_file_request(struct client *cl, const char *url, struct path_info *pi, struct blob_attr **tb)
 {
 	int fd;
 
@@ -667,12 +666,5 @@ void uh_handle_request(struct client *cl)
 		return;
 
 	req->redirect_status = 404;
-	if (conf.error_handler) {
-		error_handler = alloca(strlen(conf.error_handler) + 1);
-		strcpy(error_handler, conf.error_handler);
-		if (__handle_file_request(cl, error_handler))
-			return;
-	}
-
 	send_client_error(cl, 404, "Not Found", "The requested URL %s was not found on this server.", url);
 }
