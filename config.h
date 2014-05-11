@@ -20,5 +20,6 @@
 #define NETWORK_TIMEOUT			30				/* The number of seconds before timeout is detected */
 #define INDEX_FILE				"index.html"	/* The default index page */
 #define DOCUMENT_ROOT			"/www"			/* The document root */
+#define API_PATH				"/api"			/* The API uri */
 
 #endif

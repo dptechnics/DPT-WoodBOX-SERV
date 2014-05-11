@@ -10,6 +10,7 @@
 #include "mimetypes.h"
 #include "api.h"
 #include "client.h"
+#include "config.h"
 
 /**
  * Handle api requests
@@ -17,7 +18,7 @@
  * @url the request URL
  */
 static void api_handle_request(struct client *cl, char *url, struct path_info *pi) {
-
+	printf("Handling api request\r\n");
 }
 
 /**
@@ -26,7 +27,7 @@ static void api_handle_request(struct client *cl, char *url, struct path_info *p
  * @url the request url
  */
 static bool api_check_path(struct path_info *pi, const char *url) {
-	return uh_path_match(conf.cgi_docroot_path, pi->phys);
+	return uh_path_match(DOCUMENT_ROOT API_PATH, pi->phys);
 }
 
 /*

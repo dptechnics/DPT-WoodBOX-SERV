@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 bool load_configuration(void)
 {
 	/* Add cgi dispatch handler */
-	uh_dispatch_add(&cgi_dispatch);
+	uh_dispatch_add(&api_dispatch);
 
 	/* Set up configuration */
 	conf.script_timeout = 60;
@@ -112,9 +112,6 @@ bool load_configuration(void)
 		fprintf(stderr, "[ERROR] Could not bind socket to 0.0.0.0:80\n");
 		return false;
 	}
-
-	/* Add interpreter */
-	uh_interpreter_add(".sh", "/bin/sh");
 
 	return true;
 }
