@@ -101,14 +101,11 @@ bool load_configuration(void)
 
 	/* Set up configuration */
 	conf.script_timeout = 60;
-	conf.network_timeout = 30;
-	conf.http_keepalive = 20;
 	conf.max_script_requests = 3;
 	conf.max_connections = 100;
 	conf.realm = "WoodBox Secured";
 	conf.cgi_prefix = "/api";
 	conf.cgi_path = "/sbin:/usr/sbin:/bin:/usr/bin";
-	conf.docroot = "/www";
 
 	/* Bind a non TLS socket to port 80 */
 	if(!bind_listener_sockets(NULL, "80", false)) {
@@ -116,8 +113,8 @@ bool load_configuration(void)
 		return false;
 	}
 
-	char *str = malloc(strlen(conf.docroot) + strlen(conf.cgi_prefix) + 1);
-	strcpy(str,conf.docroot);
+	char *str = malloc(strlen(DOCUMENT_ROOT) + strlen(conf.cgi_prefix) + 1);
+	strcpy(str,DOCUMENT_ROOT);
 	strcat(str, conf.cgi_prefix);
 	conf.cgi_docroot_path = str;
 

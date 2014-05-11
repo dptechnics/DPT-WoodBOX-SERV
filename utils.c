@@ -19,6 +19,7 @@
 
 #include <ctype.h>
 #include "uhttpd.h"
+#include "config.h"
 
 bool uh_use_chunked(struct client *cl)
 {
@@ -38,7 +39,7 @@ void uh_chunk_write(struct client *cl, const void *data, int len)
 	if (cl->state == CLIENT_STATE_CLEANUP)
 		return;
 
-	uloop_timeout_set(&cl->timeout, conf.network_timeout * 1000);
+	uloop_timeout_set(&cl->timeout, NETWORK_TIMEOUT * 1000);
 	if (chunked)
 		ustream_printf(cl->us, "%X\r\n", len);
 	ustream_write(cl->us, data, len, true);
@@ -55,7 +56,7 @@ void uh_chunk_vprintf(struct client *cl, const char *format, va_list arg)
 	if (cl->state == CLIENT_STATE_CLEANUP)
 		return;
 
-	uloop_timeout_set(&cl->timeout, conf.network_timeout * 1000);
+	uloop_timeout_set(&cl->timeout, NETWORK_TIMEOUT * 1000);
 	if (!uh_use_chunked(cl)) {
 		ustream_vprintf(cl->us, format, arg);
 		return;

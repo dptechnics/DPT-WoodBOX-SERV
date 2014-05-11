@@ -270,7 +270,7 @@ static int parse_client_request(struct client *cl, char *data)
 	req->version = h_version;
 
 	/* Close connection when needed */
-	if (req->version < UH_HTTP_VER_1_1 || req->method == UH_HTTP_MSG_POST || !conf.http_keepalive)
+	if (req->version < UH_HTTP_VER_1_1 || req->method == UH_HTTP_MSG_POST)
 		req->connection_close = true;
 
 	/* Set the state as header parsed */
