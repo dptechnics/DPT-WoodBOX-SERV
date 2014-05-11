@@ -1,26 +1,20 @@
 /*
- * uhttpd - Tiny single-threaded httpd
+ * WoodBOX-server
  *
- *   Copyright (C) 2010-2013 Jo-Philipp Wich <xm@subsignal.org>
- *   Copyright (C) 2013 Felix Fietkau <nbd@openwrt.org>
+ * Server appliction for the DPTechnics WoodBOX.
  *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
+ * File: proc.c
+ * Description: process programming api
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Created by: Daan Pape
+ * Created on: May 9, 2014
  */
 
 #include <arpa/inet.h>
 #include <libubox/blobmsg.h>
 #include "uhttpd.h"
 #include "client.h"
+#include "proc.h"
 
 #define __headers \
 	__header(accept, accept) \
@@ -99,7 +93,7 @@ static char redirect_status[4];
 
 static struct env_var extra_vars[] = {
 	[_VAR_GW] = { "GATEWAY_INTERFACE", "CGI/1.1" },
-	[_VAR_SOFTWARE] = { "SERVER_SOFTWARE", "uhttpd" },
+	[_VAR_SOFTWARE] = { "SERVER_SOFTWARE", "woodbox-server" },
 	[VAR_SCRIPT_NAME] = { "SCRIPT_NAME" },
 	[VAR_SCRIPT_FILE] = { "SCRIPT_FILENAME" },
 	[VAR_DOCROOT] = { "DOCUMENT_ROOT" },
@@ -118,7 +112,12 @@ static struct env_var extra_vars[] = {
 	[VAR_REMOTE_PORT] = { "REMOTE_PORT", remote_port },
 };
 
-struct env_var *uh_get_process_vars(struct client *cl, struct path_info *pi)
+/**
+ * Parse the client request into process variables.
+ * @cl the client who made the request
+ * @pi info about the requeste path
+ */
+struct env_var *get_process_vars(struct client *cl, struct path_info *pi)
 {
 	struct http_request *req = &cl->request;
 	struct blob_attr *data = cl->hdr.head;
@@ -145,8 +144,7 @@ struct env_var *uh_get_process_vars(struct client *cl, struct path_info *pi)
 	extra_vars[VAR_PATH_INFO].value = pi->info;
 	extra_vars[VAR_USER].value = req->realm ? req->realm->user : NULL;
 
-	snprintf(redirect_status, sizeof(redirect_status),
-		 "%d", req->redirect_status);
+	snprintf(redirect_status, sizeof(redirect_status), "%d", req->redirect_status);
 	inet_ntop(cl->srv_addr.family, &cl->srv_addr.in, local_addr, sizeof(local_addr));
 	snprintf(local_port, sizeof(local_port), "%d", cl->srv_addr.port);
 	inet_ntop(cl->peer_addr.family, &cl->peer_addr.in, remote_addr, sizeof(remote_addr));
@@ -169,6 +167,7 @@ struct env_var *uh_get_process_vars(struct client *cl, struct path_info *pi)
 	return vars;
 }
 
+
 static void proc_close_fds(struct client *cl)
 {
 	struct dispatch_proc *p = &cl->dispatch.proc;
@@ -177,6 +176,7 @@ static void proc_close_fds(struct client *cl)
 	if (p->wrfd.fd >= 0)
 		close(p->wrfd.fd);
 }
+
 
 static void proc_handle_close(struct relay *r, int ret)
 {
@@ -188,6 +188,7 @@ static void proc_handle_close(struct relay *r, int ret)
 
 	request_done(r->cl);
 }
+
 
 static void proc_handle_header(struct relay *r, const char *name, const char *val)
 {

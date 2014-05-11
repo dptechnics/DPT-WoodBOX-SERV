@@ -32,6 +32,7 @@
 #include "uhttpd.h"
 #include "mimetypes.h"
 #include "client.h"
+#include "config.h"
 
 static LIST_HEAD(index_files);
 static LIST_HEAD(dispatch_handlers);
@@ -243,20 +244,14 @@ uh_path_lookup(struct client *cl, const char *url)
 		return &p;
 	}
 
-	/* try to locate index file */
-	len = path_phys + sizeof(path_phys) - pathptr - 1;
-	list_for_each_entry(idx, &index_files, list) {
-		if (strlen(idx->name) > len)
-			continue;
-
-		strcpy(pathptr, idx->name);
-		if (!stat(path_phys, &s) && (s.st_mode & S_IFREG)) {
-			memcpy(&p.stat, &s, sizeof(p.stat));
-			break;
-		}
-
-		*pathptr = 0;
+	/* Check if the folder contains an index file */
+	strcpy(pathptr, INDEX_FILE);
+	if (!stat(path_phys, &s) && (s.st_mode & S_IFREG)) {
+		memcpy(&p.stat, &s, sizeof(p.stat));
 	}
+
+	*pathptr = 0;
+
 
 	p.root = docroot;
 	p.phys = path_phys;
@@ -637,8 +632,7 @@ void uh_dispatch_add(struct dispatch_handler *d)
 	list_add_tail(&d->list, &dispatch_handlers);
 }
 
-static struct dispatch_handler *
-dispatch_find(const char *url, struct path_info *pi)
+static struct dispatch_handler *dispatch_find(const char *url, struct path_info *pi)
 {
 	struct dispatch_handler *d;
 
@@ -661,8 +655,7 @@ dispatch_find(const char *url, struct path_info *pi)
 	return NULL;
 }
 
-static void
-uh_invoke_script(struct client *cl, struct dispatch_handler *d, struct path_info *pi)
+static void uh_invoke_script(struct client *cl, struct dispatch_handler *d, struct path_info *pi)
 {
 	char *url = blobmsg_data(blob_data(cl->hdr.head));
 

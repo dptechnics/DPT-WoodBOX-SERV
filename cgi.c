@@ -20,6 +20,7 @@
 #include <libubox/blobmsg.h>
 #include "uhttpd.h"
 #include "client.h"
+#include "proc.h"
 
 static LIST_HEAD(interpreters);
 
@@ -45,7 +46,7 @@ static void cgi_main(struct client *cl, struct path_info *pi, char *url)
 	clearenv();
 	setenv("PATH", conf.cgi_path, 1);
 
-	for (var = uh_get_process_vars(cl, pi); var->name; var++) {
+	for (var = get_process_vars(cl, pi); var->name; var++) {
 		if (!var->value)
 			continue;
 

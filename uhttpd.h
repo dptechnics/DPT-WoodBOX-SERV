@@ -275,7 +275,7 @@ void uh_relay_close(struct relay *r, int ret);
 void uh_relay_free(struct relay *r);
 void uh_relay_kill(struct client *cl, struct relay *r);
 
-struct env_var *uh_get_process_vars(struct client *cl, struct path_info *pi);
+
 bool uh_create_process(struct client *cl, struct path_info *pi, char *url,
 		       void (*cb)(struct client *cl, struct path_info *pi, char *url));
 

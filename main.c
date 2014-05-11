@@ -121,8 +121,7 @@ bool load_configuration(void)
 	strcat(str, conf.cgi_prefix);
 	conf.cgi_docroot_path = str;
 
-	/* Make 'index.html' the default document */
-	uh_index_add("index.html");
+	/* Add interpreter */
 	uh_interpreter_add(".sh", "/bin/sh");
 
 	return true;
