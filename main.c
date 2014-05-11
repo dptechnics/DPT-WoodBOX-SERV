@@ -115,7 +115,7 @@ bool load_configuration(void)
 
 	/* Make 'index.html' the default document */
 	uh_index_add("index.html");
-	uh_interpreter_add(".html", "/bin/sh");
+	uh_interpreter_add(".sh", "/bin/sh");
 
 	return true;
 }
