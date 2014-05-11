@@ -659,7 +659,6 @@ void uh_handle_request(struct client *cl)
 {
 	struct http_request *req = &cl->request;
 	char *url = blobmsg_data(blob_data(cl->hdr.head));
-	char *error_handler;
 
 	req->redirect_status = 200;
 	if (__handle_file_request(cl, url))
