@@ -641,7 +641,7 @@ static struct dispatch_handler *dispatch_find(const char *url, struct path_info 
 {
 	/* Check if this request should be handled by the api dispatcher*/
 	if (api_dispatch.check_url(url))
-		return api_dispatch;
+		return &api_dispatch;
 
 	return NULL;
 }
