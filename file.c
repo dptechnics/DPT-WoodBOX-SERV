@@ -639,23 +639,9 @@ void uh_dispatch_add(struct dispatch_handler *d)
  */
 static struct dispatch_handler *dispatch_find(const char *url, struct path_info *pi)
 {
-	struct dispatch_handler *d;
-
-	list_for_each_entry(d, &dispatch_handlers, list) {
-		if (pi) {
-			if (d->check_url)
-				continue;
-
-			if (d->check_path(pi, url))
-				return d;
-		} else {
-			if (d->check_path)
-				continue;
-
-			if (d->check_url(url))
-				return d;
-		}
-	}
+	/* Check if this request should be handled by the api dispatcher*/
+	if (&api_dispatch->check_url(url))
+		return &api_dispatch;
 
 	return NULL;
 }

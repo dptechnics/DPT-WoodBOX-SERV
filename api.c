@@ -19,6 +19,8 @@
  */
 static void api_handle_request(struct client *cl, char *url, struct path_info *pi) {
 	printf("Handling api request\r\n");
+
+
 }
 
 /**
