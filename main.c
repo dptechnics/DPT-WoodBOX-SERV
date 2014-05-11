@@ -96,6 +96,9 @@ int main(int argc, char **argv)
  */
 bool load_configuration(void)
 {
+	/* Add cgi dispatch handler */
+	uh_dispatch_add(&cgi_dispatch);
+
 	/* Set up configuration */
 	conf.script_timeout = 60;
 	conf.network_timeout = 30;
@@ -104,7 +107,7 @@ bool load_configuration(void)
 	conf.max_connections = 100;
 	conf.realm = "WoodBox Secured";
 	conf.cgi_prefix = "/api";
-	conf.cgi_path = "/sbin";
+	conf.cgi_path = "/sbin:/usr/sbin:/bin:/usr/bin";
 	conf.docroot = "/www";
 
 	/* Bind a non TLS socket to port 80 */
