@@ -158,9 +158,8 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	/* Decode the full url when  there is no querystring */
 	else if (uh_urldecode(&uh_buf[docroot_len],
 			      sizeof(uh_buf) - docroot_len - 1,
-			      url, strlen(url) ) < 0) {
-		printf("Returned null\r\n");
-		return NULL;}
+			      url, strlen(url) ) < 0)
+		return NULL;
 
 	printf("Create canonical path\r\n");
 	/* Create canonical path */
@@ -193,8 +192,10 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	/* Check whether found path is within docroot */
 	if (strncmp(path_phys, DOCUMENT_ROOT, docroot_len) != 0 ||
 	    (path_phys[docroot_len] != 0 &&
-	     path_phys[docroot_len] != '/'))
+	     path_phys[docroot_len] != '/')){
+		printf("Returned null %s, %s", path_phys, DOCUMENT_ROOT);
 		return NULL;
+	}
 
 	/* Check if the found file is a regular file */
 	if (p.stat.st_mode & S_IFREG) {
