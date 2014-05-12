@@ -161,7 +161,11 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 			      url, strlen(url) ) < 0)
 		return NULL;
 
-	printf("Create canonical path\r\n");
+	/* Return when this is an api call, no need to search for file */
+	if(uh_path_match(API_PATH, url)) {
+		return &p;
+	}
+
 	/* Create canonical path */
 	len = strlen(uh_buf);
 	slash = len && uh_buf[len - 1] == '/';
@@ -185,6 +189,8 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 		if (stat(path_phys, &p.stat))
 			continue;
 
+		printf("%s", uh_buf);
+
 		snprintf(path_info, sizeof(path_info), "%s", uh_buf + i);
 		break;
 	}
@@ -193,7 +199,6 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	if (strncmp(path_phys, DOCUMENT_ROOT, docroot_len) != 0 ||
 	    (path_phys[docroot_len] != 0 &&
 	     path_phys[docroot_len] != '/')){
-		printf("Returned null %s, %s", path_phys, DOCUMENT_ROOT);
 		return NULL;
 	}
 
@@ -203,18 +208,15 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 		p.phys = path_phys;
 		p.name = &path_phys[docroot_len];
 		p.info = path_info[0] ? path_info : NULL;
-		printf("Very strange hier\r\n");
 		return &p;
 	}
 
 	/* Make sure it is not a directory */
 	if (!(p.stat.st_mode & S_IFDIR)){
-		printf("Het is geen directory\r\n");
 		return NULL;
 	}
 
 	if (path_info[0]){
-		printf("HIer zit het hem\r\n");
 	    return NULL;
 	}
 
@@ -253,8 +255,6 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	p.root = DOCUMENT_ROOT;
 	p.phys = path_phys;
 	p.name = &path_phys[docroot_len];
-
-	printf("Line 257\r\n");
 
 	return p.phys ? &p : NULL;
 }
@@ -648,6 +648,11 @@ static bool __handle_file_request(struct client *cl, char *url)
 	if (!pi)
 		return false;
 
+	if(pi->api) {
+		api_handle_request(cl, url, pi);
+		return true;
+	}
+
 	if (pi->redirected)
 		return true;
 
@@ -657,11 +662,6 @@ static bool __handle_file_request(struct client *cl, char *url)
 
 	if (!uh_auth_check(cl, pi))
 		return true;
-
-	if(uh_path_match(DOCUMENT_ROOT API_PATH, pi->phys))
-		api_handle_request(cl, url, pi);
-	else
-		uh_file_request(cl, url, pi, tb);
 
 	return true;
 }

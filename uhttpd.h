@@ -133,6 +133,7 @@ struct path_info {
 	const char *query;
 	const char *auth;
 	bool redirected;
+	bool api;
 	struct stat stat;
 	const struct interpreter *ip;
 };
