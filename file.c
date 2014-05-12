@@ -161,11 +161,6 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 			      url, strlen(url) ) < 0)
 		return NULL;
 
-	/* Return when this is an api call, no need to search for file */
-	if(uh_path_match(API_PATH, url)) {
-		return &p;
-	}
-
 	/* Create canonical path */
 	len = strlen(uh_buf);
 	slash = len && uh_buf[len - 1] == '/';
@@ -214,6 +209,11 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	/* Make sure it is not a directory */
 	if (!(p.stat.st_mode & S_IFDIR)){
 		return NULL;
+	}
+
+	/* Return when this is an api call, no need to search for file */
+	if(uh_path_match(API_PATH, url)) {
+		return &p;
 	}
 
 	if (path_info[0]){
