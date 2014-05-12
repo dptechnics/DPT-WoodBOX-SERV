@@ -602,7 +602,7 @@ void read_from_client(struct client *cl)
 		/* Testing testing */
 		test = (char*) malloc (len * sizeof(char));
 		memcpy(test,str,len*sizeof(char));
-		test[len-1] = 0;
+		test[len] = 0;
 		printf("String read: %s", test);
 		free(test);
 		/* Testing  testing */
