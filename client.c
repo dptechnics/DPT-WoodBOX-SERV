@@ -469,8 +469,8 @@ void client_post_data(struct client *cl)
 		printf("Buffer A %s\r\n", buf);
 
 		/* If there is data to be sent return */
-		if (!d->data_send)
-			return;
+		//if (!d->data_send)
+			// return;
 
 		/* Get the current lenght of the buffer */
 		cur_len = min(r->content_length, len);
