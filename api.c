@@ -12,6 +12,10 @@
 #include "client.h"
 #include "config.h"
 
+/**
+ * Handle response write in chunks
+ * cl the client containing the response
+ */
 static void handle_chunk_write(struct client *cl)
 {
 	int len;
@@ -32,17 +36,10 @@ static void handle_chunk_write(struct client *cl)
 	}
 }
 
-/**
- * Handle api requests
- * @cl the client who sent the request
- * @url the request URL
- */
-void api_handle_request(struct client *cl, char *url, struct path_info *pi) {
-	printf("Handling api request\r\n");
-	cl->response = "{\"data\": \"test\"}";
-
-	/* Write Ok response */
-	write_http_header(cl, 200, "OK");
+static void write_response(struct client *cl, int code, char *summary)
+{
+	/* Write response */
+	write_http_header(cl, code, summary);
 	ustream_printf(cl->us, "Content-Type: application/json\r\n");
 	ustream_printf(cl->us, "Content-Length: %i\r\n\r\n", strlen(cl->response));
 
@@ -58,5 +55,70 @@ void api_handle_request(struct client *cl, char *url, struct path_info *pi) {
 	cl->dispatch.free = NULL;						/* Data free handler */
 	cl->dispatch.close_fds = NULL;					/* Data free handler for request */
 
+	/* Start sending data */
 	handle_chunk_write(cl);
+}
+
+/**
+ * Handle GET requests.
+ * @cl the client who sent the request
+ * @url the request URL
+ * @pi info concerning the path
+ */
+static void get_request_handler(struct client *cl, char *url, struct path_info *pi)
+{
+	printf("Handling GET request: %s\r\n", pi->query ? pi->query : "");
+}
+
+/**
+ * Handle POST requests.
+ * @cl the client who sent the request
+ * @url the request URL
+ * @pi info concerning the path
+ */
+static void post_request_handler(struct client *cl, char *url, struct path_info *pi)
+{
+	printf("Handling POST request\r\n");
+}
+
+/**
+ * Handle PUT requests.
+ * @cl the client who sent the request
+ * @url the request URL
+ * @pi info concerning the path
+ */
+static void put_request_handler(struct client *cl, char *url, struct path_info *pi)
+{
+	printf("Handling PUT request\r\n");
+}
+
+
+/**
+ * Handle api requests
+ * @cl the client who sent the request
+ * @url the request URL
+ * @pi info concerning the path
+ */
+void api_handle_request(struct client *cl, char *url, struct path_info *pi)
+{
+	/* Check which kind of request it is */
+	switch(cl->request.method){
+	case UH_HTTP_MSG_GET:
+		get_request_handler(cl, url, pi);
+		break;
+	case UH_HTTP_MSG_POST:
+		post_request_handler(cl, url, pi);
+		break;
+	case UH_HTTP_MSG_PUT:
+		put_request_handler(cl, url, pi);
+		break;
+	default:
+		break;
+	}
+
+	/* Test reponse */
+	cl->response = "{\"data\": \"test\"}";
+
+	/* Write the response */
+	write_response(cl, 200, "OK");
 }
