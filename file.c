@@ -131,7 +131,6 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	struct stat s;
 
 	/* Return NULL when the URL is undefined */
-	printf("URL: %s\r\n", url);
 	if (url == NULL)
 		return NULL;
 
@@ -150,8 +149,10 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 		if (pathptr > url) {
 			if (uh_urldecode(&uh_buf[docroot_len],
 					 sizeof(uh_buf) - docroot_len - 1,
-					 url, pathptr - url ) < 0)
+					 url, pathptr - url ) < 0) {
+				printf("URL decode errror\r\n");
 				return NULL;
+			}
 		}
 	}
 
