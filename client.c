@@ -591,7 +591,6 @@ void read_from_client(struct client *cl)
 	struct ustream *us = cl->us;
 	char *str;
 	int len;
-	char *test;
 
 	client_done = false;
 	do {
