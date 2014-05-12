@@ -466,29 +466,28 @@ void client_post_data(struct client *cl)
 			break;
 
 		/* If there is data to be sent return */
-		//if (!d->data_send)
-			//return;
+		if (!d->data_send)
+			return;
 
 		/* Get the current lenght of the buffer */
 		cur_len = min(r->content_length, len);
 		if (cur_len) {
 			/* Stop if the data is blocked */
-			//if (d->data_blocked)
-				//break;
+			if (d->data_blocked)
+				break;
 
 			if (d->data_send) {
-				printf("Data send: %s\r\n", buf);
 				cur_len = d->data_send(cl, buf, cur_len);
 			}
 
 			r->content_length -= cur_len;
 			ustream_consume(cl->us, cur_len);
-			//continue;
+			continue;
 		}
 
 		/* Stop is the transfer is not chunked */
-		//if (!r->transfer_chunked)
-			//break;
+		if (!r->transfer_chunked)
+			break;
 
 		if (r->transfer_chunked > 1)
 			offset = 2;
@@ -500,7 +499,6 @@ void client_post_data(struct client *cl)
 
 		/* Nullterminate the string */
 		*sep = 0;
-		printf("Separator: %s\r\n", sep);
 
 		r->content_length = strtoul(buf + offset, &sep, 16);
 		r->transfer_chunked++;
@@ -592,13 +590,22 @@ void read_from_client(struct client *cl)
 	struct ustream *us = cl->us;
 	char *str;
 	int len;
+	char *test;
 
 	client_done = false;
 	do {
-		/* Read sata if there is any */
+		/* Read data if there is any */
 		str = ustream_get_read_buf(us, &len);
 		if (!str || !len)
 			break;
+
+		/* Testing testing */
+		test = (char*) malloc (len * sizeof(char));
+		memcpy(test,str,len*sizeof(char));
+		test[len-1] = 0;
+		printf("String read: %s", test);
+		free(test);
+		/* Testing  testing */
 
 		if (cl->state >= array_size(read_cbs) || !read_cbs[cl->state])
 			break;
