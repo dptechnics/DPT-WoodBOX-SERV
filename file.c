@@ -158,9 +158,11 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	/* Decode the full url when  there is no querystring */
 	else if (uh_urldecode(&uh_buf[docroot_len],
 			      sizeof(uh_buf) - docroot_len - 1,
-			      url, strlen(url) ) < 0)
-		return NULL;
+			      url, strlen(url) ) < 0) {
+		printf("Returned null\r\n");
+		return NULL;}
 
+	printf("Create canonical path\r\n");
 	/* Create canonical path */
 	len = strlen(uh_buf);
 	slash = len && uh_buf[len - 1] == '/';
