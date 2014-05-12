@@ -203,15 +203,20 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 		p.phys = path_phys;
 		p.name = &path_phys[docroot_len];
 		p.info = path_info[0] ? path_info : NULL;
+		printf("Very strange hier\r\n");
 		return &p;
 	}
 
 	/* Make sure it is not a directory */
-	if (!(p.stat.st_mode & S_IFDIR))
+	if (!(p.stat.st_mode & S_IFDIR)){
+		printf("Het is geen directory\r\n");
 		return NULL;
+	}
 
-	if (path_info[0])
+	if (path_info[0]){
+		printf("HIer zit het hem\r\n");
 	    return NULL;
+	}
 
 	pathptr = path_phys + strlen(path_phys);
 
@@ -248,6 +253,8 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	p.root = DOCUMENT_ROOT;
 	p.phys = path_phys;
 	p.name = &path_phys[docroot_len];
+
+	printf("Line 257\r\n");
 
 	return p.phys ? &p : NULL;
 }
