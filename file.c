@@ -184,8 +184,6 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 		if (stat(path_phys, &p.stat))
 			continue;
 
-		printf("%s", uh_buf);
-
 		snprintf(path_info, sizeof(path_info), "%s", uh_buf + i);
 		break;
 	}
