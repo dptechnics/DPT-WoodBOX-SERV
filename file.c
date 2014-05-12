@@ -149,10 +149,9 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 		if (pathptr > url) {
 			if (uh_urldecode(&uh_buf[docroot_len],
 					 sizeof(uh_buf) - docroot_len - 1,
-					 url, pathptr - url ) < 0) {
-				printf("URL decode errror\r\n");
+					 url, pathptr - url ) < 0)
 				return NULL;
-			}
+
 		}
 	}
 
