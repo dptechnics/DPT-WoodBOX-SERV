@@ -211,11 +211,6 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 		return NULL;
 	}
 
-	/* Return when this is an api call, no need to search for file */
-	if(uh_path_match(API_PATH, url)) {
-		return &p;
-	}
-
 	if (path_info[0]){
 	    return NULL;
 	}
@@ -631,7 +626,7 @@ error:
 			url);
 }
 
-static bool __handle_file_request(struct client *cl, char *url)
+static bool handle_file_request(struct client *cl, char *url)
 {
 	static const struct blobmsg_policy hdr_policy[__HDR_MAX] = {
 		[HDR_AUTHORIZATION] = { "authorization", BLOBMSG_TYPE_STRING },
@@ -643,16 +638,10 @@ static bool __handle_file_request(struct client *cl, char *url)
 	};
 	struct blob_attr *tb[__HDR_MAX];
 	struct path_info *pi;
-	
+
 	pi = path_lookup(cl, url);
 	if (!pi)
 		return false;
-
-	/* If this is an api call handle it */
-	if(pi->api) {
-		api_handle_request(cl, url, pi);
-		return true;
-	}
 
 	if (pi->redirected)
 		return true;
@@ -664,7 +653,7 @@ static bool __handle_file_request(struct client *cl, char *url)
 	if (!uh_auth_check(cl, pi))
 		return true;
 
-	/* Perform file request */
+	/* Handle file request */
 	uh_file_request(cl, url, pi, tb);
 
 	return true;
@@ -676,8 +665,14 @@ void uh_handle_request(struct client *cl)
 	char *url = blobmsg_data(blob_data(cl->hdr.head));
 
 	req->redirect_status = 200;
-	if (__handle_file_request(cl, url))
-		return;
+
+	/* Check if this is an api or file request */
+	if(uh_path_match(API_PATH, url)){
+		api_handle_request(cl, url);
+	}else{
+		if (handle_file_request(cl, url))
+			return;
+	}
 
 	req->redirect_status = 404;
 	send_client_error(cl, 404, "Not Found", "The requested URL %s was not found on this server.", url);

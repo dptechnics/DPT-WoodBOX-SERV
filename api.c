@@ -65,9 +65,9 @@ static void write_response(struct client *cl, int code, char *summary)
  * @url the request URL
  * @pi info concerning the path
  */
-static void get_request_handler(struct client *cl, char *url, struct path_info *pi)
+static void get_request_handler(struct client *cl, char *url)
 {
-	printf("Handling GET request: %s\r\n", pi->query ? pi->query : "");
+	printf("Handling GET request\r\n");
 }
 
 /**
@@ -76,7 +76,7 @@ static void get_request_handler(struct client *cl, char *url, struct path_info *
  * @url the request URL
  * @pi info concerning the path
  */
-static void post_request_handler(struct client *cl, char *url, struct path_info *pi)
+static void post_request_handler(struct client *cl, char *url)
 {
 	printf("Handling POST request\r\n");
 
@@ -89,7 +89,7 @@ static void post_request_handler(struct client *cl, char *url, struct path_info 
  * @url the request URL
  * @pi info concerning the path
  */
-static void put_request_handler(struct client *cl, char *url, struct path_info *pi)
+static void put_request_handler(struct client *cl, char *url)
 {
 	printf("Handling PUT request\r\n");
 }
@@ -101,18 +101,18 @@ static void put_request_handler(struct client *cl, char *url, struct path_info *
  * @url the request URL
  * @pi info concerning the path
  */
-void api_handle_request(struct client *cl, char *url, struct path_info *pi)
+void api_handle_request(struct client *cl, char *url)
 {
 	/* Check which kind of request it is */
 	switch(cl->request.method){
 	case UH_HTTP_MSG_GET:
-		get_request_handler(cl, url, pi);
+		get_request_handler(cl, url);
 		break;
 	case UH_HTTP_MSG_POST:
-		post_request_handler(cl, url, pi);
+		post_request_handler(cl, url);
 		break;
 	case UH_HTTP_MSG_PUT:
-		put_request_handler(cl, url, pi);
+		put_request_handler(cl, url);
 		break;
 	default:
 		break;
