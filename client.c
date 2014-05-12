@@ -359,6 +359,8 @@ static void client_parse_header(struct client *cl, char *data)
 	char *name;
 	char *val;
 
+	printf("Client parse header: %s\r\n", data);
+
 	/* If there is no data wait for it */
 	if (!*data) {
 		uloop_timeout_cancel(&cl->timeout);
@@ -543,7 +545,7 @@ static bool client_data_handler(struct client *cl, char *buf, int len)
 
 /**
  * Handler called when the header should be parsed.
- * @cl the client whos sent the header.
+ * @cl the client who sent the header.
  * @buf the buffer containing the header.
  * @len the length of the buffer.
  */
@@ -551,8 +553,6 @@ static bool client_header_handler(struct client *cl, char *buf, int len)
 {
 	char *newline;
 	int line_len;
-
-	printf("Header buffer: %s\r\n", buf);
 
 	/* Get the first line of the data until a newline */
 	newline = strstr(buf, "\r\n");
@@ -606,8 +606,7 @@ void read_from_client(struct client *cl)
 
 		/* Call different handlers and parse */
 		if (!read_cbs[cl->state](cl, str, len)) {
-			if (len == us->r.buffer_len &&
-			    cl->state != CLIENT_STATE_DATA)
+			if (len == us->r.buffer_len && cl->state != CLIENT_STATE_DATA)
 				header_error(cl, 413, "Request Entity Too Large");
 			break;
 		}
