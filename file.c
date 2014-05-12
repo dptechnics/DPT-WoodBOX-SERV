@@ -648,6 +648,7 @@ static bool __handle_file_request(struct client *cl, char *url)
 	if (!pi)
 		return false;
 
+	/* If this is an api call handle it */
 	if(pi->api) {
 		api_handle_request(cl, url, pi);
 		return true;
@@ -662,6 +663,9 @@ static bool __handle_file_request(struct client *cl, char *url)
 
 	if (!uh_auth_check(cl, pi))
 		return true;
+
+	/* Perform file request */
+	uh_file_request(cl, url, pi, tb);
 
 	return true;
 }
