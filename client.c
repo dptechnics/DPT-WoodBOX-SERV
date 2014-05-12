@@ -536,6 +536,7 @@ void client_post_data(struct client *cl)
  */
 static bool client_data_handler(struct client *cl, char *buf, int len)
 {
+	printf("Handling POST data\r\n");
 	client_post_data(cl);
 	return false;
 }
@@ -598,14 +599,6 @@ void read_from_client(struct client *cl)
 		str = ustream_get_read_buf(us, &len);
 		if (!str || !len)
 			break;
-
-		/* Testing testing */
-		test = (char*) malloc (len * sizeof(char));
-		memcpy(test,str,len*sizeof(char));
-		test[len] = 0;
-		printf("String read: %s", test);
-		free(test);
-		/* Testing  testing */
 
 		if (cl->state >= array_size(read_cbs) || !read_cbs[cl->state])
 			break;
