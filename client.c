@@ -359,13 +359,10 @@ static void client_parse_header(struct client *cl, char *data)
 	char *name;
 	char *val;
 
-	printf("Client parse header: %s\r\n", data);
-
 	/* If there is no data wait for it */
 	if (!*data) {
 		uloop_timeout_cancel(&cl->timeout);
 		cl->state = CLIENT_STATE_DATA;
-		printf("Second newline detected: CLIENT_STATE_DATA\r\n");
 		client_header_complete(cl);
 		return;
 	}
@@ -607,7 +604,8 @@ void read_from_client(struct client *cl)
 
 		/* Call different handlers and parse */
 		if (!read_cbs[cl->state](cl, str, len)) {
-			if (len == us->r.buffer_len && cl->state != CLIENT_STATE_DATA)
+			if (len == us->r.buffer_len &&
+			    cl->state != CLIENT_STATE_DATA)
 				header_error(cl, 413, "Request Entity Too Large");
 			break;
 		}
