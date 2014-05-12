@@ -365,6 +365,7 @@ static void client_parse_header(struct client *cl, char *data)
 	if (!*data) {
 		uloop_timeout_cancel(&cl->timeout);
 		cl->state = CLIENT_STATE_DATA;
+		printf("Second newline detected: CLIENT_STATE_DATA\r\n");
 		client_header_complete(cl);
 		return;
 	}
