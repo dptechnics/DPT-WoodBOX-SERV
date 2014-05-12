@@ -224,6 +224,7 @@ struct client {
 	struct blob_buf hdr;
 	struct dispatch dispatch;
 	char *response;
+	int readidx;
 };
 
 extern char uh_buf[4096];

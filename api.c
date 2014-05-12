@@ -19,13 +19,9 @@ static void handle_chunk_write(struct client *cl)
 	len = strlen(cl->response);
 
 	while (cl->us->w.data_bytes < 256) {
-		r = len > sizeof(uh_buf) ? sizeof(uh_buf) : len;
+		r = (len - cl->readidx) > sizeof(uh_buf) ? sizeof(uh_buf) : (len - cl->readidx);
+		cl->readidx = r;
 		strncpy(uh_buf, cl->response, r);
-
-		if (r < 0) {
-			if (errno == EINTR)
-				continue;
-		}
 
 		if (!r) {
 			request_done(cl);
@@ -43,10 +39,12 @@ static void handle_chunk_write(struct client *cl)
  */
 void api_handle_request(struct client *cl, char *url, struct path_info *pi) {
 	printf("Handling api request\r\n");
+	cl->response = "{\"data\": \"test\"}";
 
-	/* Test handler */
+	/* Write Ok response */
 	write_http_header(cl, 200, "OK");
 	ustream_printf(cl->us, "Content-Type: application/json\r\n");
+	ustream_printf(cl->us, "Content-Length: %i\r\n\r\n", strlen(cl->response));
 
 	/* Stop if this is a header only request */
 	if (cl->request.method == UH_HTTP_MSG_HEAD) {
@@ -54,9 +52,8 @@ void api_handle_request(struct client *cl, char *url, struct path_info *pi) {
 		return;
 	}
 
-	cl->response = "{\"data\": \"test\"}";
-
 	/* Set up client data handlers */
+	cl->readidx = 0;
 	cl->dispatch.write_cb = handle_chunk_write;		/* Data write handler */
 	cl->dispatch.free = NULL;						/* Data free handler */
 	cl->dispatch.close_fds = NULL;					/* Data free handler for request */
