@@ -203,6 +203,8 @@ int uh_b64decode(char *buf, int blen, const void *src, int slen)
 
 bool uh_path_match(const char *prefix, const char *url)
 {
+	printf("Prefix: %s, url: %s\r\n", url);
+
 	int len = strlen(prefix);
 
 	if (strncmp(url, prefix, len) != 0)
