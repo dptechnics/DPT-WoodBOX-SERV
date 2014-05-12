@@ -635,7 +635,7 @@ static bool __handle_file_request(struct client *cl, char *url)
 	struct path_info *pi;
 	
 	/* Check if the url points to api request */
-	if (uh_path_match(API_PATH, pi->phys)){
+	if (uh_path_match(API_PATH, url)){
 		api_handle_request(cl, url, pi);
 		return true;
 	}
