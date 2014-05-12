@@ -79,6 +79,8 @@ static void get_request_handler(struct client *cl, char *url, struct path_info *
 static void post_request_handler(struct client *cl, char *url, struct path_info *pi)
 {
 	printf("Handling POST request\r\n");
+
+	client_post_data(cl);
 }
 
 /**

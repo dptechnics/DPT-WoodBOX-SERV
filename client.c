@@ -255,6 +255,7 @@ static int parse_client_request(struct client *cl, char *data)
 	/* Clear the previous request info from the client */
 	memset(&cl->request, 0, sizeof(cl->request));
 
+	/* TODO: bad request bug on PUT requests */
 	/* Find the enums corresponding to the method and type */
 	h_method = find_idx(http_methods, ARRAY_SIZE(http_methods), type);
 	h_version = find_idx(http_versions, ARRAY_SIZE(http_versions), version);
@@ -450,8 +451,10 @@ void client_post_data(struct client *cl)
 	int len;
 
 	/* If there is no data to handle return */
-	if (cl->state == CLIENT_STATE_DONE)
+	if (cl->state == CLIENT_STATE_DONE) {
+		printf("No data to handle\r\n");
 		return;
+	}
 
 	while (1) {
 		char *sep;
@@ -462,6 +465,8 @@ void client_post_data(struct client *cl)
 		buf = ustream_get_read_buf(cl->us, &len);
 		if (!buf || !len)
 			break;
+
+		printf("Buffer A %s\r\n", buf);
 
 		/* If there is data to be sent return */
 		if (!d->data_send)
@@ -474,8 +479,10 @@ void client_post_data(struct client *cl)
 			if (d->data_blocked)
 				break;
 
-			if (d->data_send)
+			if (d->data_send) {
+				printf("Data send: %s\r\n", buf);
 				cur_len = d->data_send(cl, buf, cur_len);
+			}
 
 			r->content_length -= cur_len;
 			ustream_consume(cl->us, cur_len);
@@ -496,6 +503,8 @@ void client_post_data(struct client *cl)
 
 		/* Nullterminate the string */
 		*sep = 0;
+
+		printf("Separator: %s\r\n", sep);
 
 		r->content_length = strtoul(buf + offset, &sep, 16);
 		r->transfer_chunked++;
