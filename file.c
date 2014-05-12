@@ -134,8 +134,6 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	if (url == NULL)
 		return NULL;
 
-	printf("Path lookup\r\n");
-
 	memset(&p, 0, sizeof(p));
 	path_phys[0] = 0;
 	path_info[0] = 0;
