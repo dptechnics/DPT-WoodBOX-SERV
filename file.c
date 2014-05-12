@@ -633,6 +633,12 @@ static bool __handle_file_request(struct client *cl, char *url)
 	};
 	struct blob_attr *tb[__HDR_MAX];
 	struct path_info *pi;
+	
+	/* Check if the url points to api request */
+	if (uh_path_match(API_PATH, pi->phys)){
+		api_handle_request(cl, url, pi);
+		return true;
+	}
 
 	pi = path_lookup(cl, url);
 	if (!pi)
@@ -648,10 +654,7 @@ static bool __handle_file_request(struct client *cl, char *url)
 	if (!uh_auth_check(cl, pi))
 		return true;
 
-	if (uh_path_match(DOCUMENT_ROOT API_PATH, pi->phys))
-		api_handle_request(cl, url, pi);
-	else
-		uh_file_request(cl, url, pi, tb);
+	uh_file_request(cl, url, pi, tb);
 
 	return true;
 }
