@@ -237,6 +237,7 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 		return &p;
 	}
 
+	printf("Checking for index file\r\n");
 	/* Check if the folder contains an index file */
 	strcpy(pathptr, INDEX_FILE);
 	if (!stat(path_phys, &s) && (s.st_mode & S_IFREG)) {
