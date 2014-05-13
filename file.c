@@ -537,6 +537,7 @@ static void file_write_cb(struct client *cl)
 	int r;
 
 	while (cl->us->w.data_bytes < 256) {
+		printf("Writing file chunk\r\n");
 		r = read(fd, uh_buf, sizeof(uh_buf));
 		if (r < 0) {
 			if (errno == EINTR)
