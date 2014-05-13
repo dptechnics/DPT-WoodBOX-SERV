@@ -537,7 +537,6 @@ static void file_write_cb(struct client *cl)
 	int r;
 
 	while (cl->us->w.data_bytes < 256) {
-		printf("Writing file chunk\r\n");
 		r = read(fd, uh_buf, sizeof(uh_buf));
 		if (r < 0) {
 			if (errno == EINTR)
@@ -600,6 +599,8 @@ static void uh_file_data(struct client *cl, struct path_info *pi, int fd)
 static void uh_file_request(struct client *cl, const char *url, struct path_info *pi, struct blob_attr **tb)
 {
 	int fd;
+
+	printf("Opening file: %s\r\n", pi->phys);
 
 	if (!(pi->stat.st_mode & S_IROTH))
 		goto error;
