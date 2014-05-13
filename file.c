@@ -246,9 +246,10 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 		if (!stat(path_phys, &s) && (s.st_mode & S_IFREG)) {
 			printf("In memcopy\r\n");
 			memcpy(&p.stat, &s, sizeof(p.stat));
+		} else {
+			/* Ensure null termination */
+			*pathptr = 0;
 		}
-		/* Ensure null termination */
-		*pathptr = 0;
 	}
 
 	p.root = DOCUMENT_ROOT;
