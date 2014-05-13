@@ -239,9 +239,11 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 
 	/* Check if the folder contains an index file */
 	len = path_phys + sizeof(path_phys) - pathptr - 1;
+	printf("path_phys: %s\r\npathptr: %s\r\nlen: %d",path_phys, pathptr, len);
 	if(strlen(INDEX_FILE) <= len){
 
 		strcpy(pathptr, INDEX_FILE);
+		printf("Path: %s\r\n", path_phys);
 		if (!stat(path_phys, &s) && (s.st_mode & S_IFREG)) {
 			memcpy(&p.stat, &s, sizeof(p.stat));
 		}
