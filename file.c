@@ -601,8 +601,6 @@ static void uh_file_request(struct client *cl, const char *url, struct path_info
 {
 	int fd;
 
-	printf("Opening file: %s\r\n", pi->phys);
-
 	if (!(pi->stat.st_mode & S_IROTH))
 		goto error;
 
