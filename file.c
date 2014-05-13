@@ -242,12 +242,10 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	if(strlen(INDEX_FILE) <= len){
 
 		strcpy(pathptr, INDEX_FILE);
-		printf("Path: %s\r\n", path_phys);
 		if (!stat(path_phys, &s) && (s.st_mode & S_IFREG)) {
-			printf("In memcopy\r\n");
 			memcpy(&p.stat, &s, sizeof(p.stat));
 		} else {
-			/* Ensure null termination */
+			/* Stop when strcpy is not needed */
 			*pathptr = 0;
 		}
 	}
@@ -255,8 +253,6 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	p.root = DOCUMENT_ROOT;
 	p.phys = path_phys;
 	p.name = &path_phys[docroot_len];
-
-	printf("p.phys = %s\r\n", p.phys);
 
 	return p.phys ? &p : NULL;
 }
