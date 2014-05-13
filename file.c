@@ -238,12 +238,16 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 	}
 
 	/* Check if the folder contains an index file */
-	strcpy(pathptr, INDEX_FILE);
-	if (!stat(path_phys, &s) && (s.st_mode & S_IFREG)) {
-		memcpy(&p.stat, &s, sizeof(p.stat));
+	len = path_phys + sizeof(path_phys) - pathptr - 1;
+	if(strlen(INDEX_FILE) <= len){
+
+		strcpy(pathptr, INDEX_FILE);
+		if (!stat(path_phys, &s) && (s.st_mode & S_IFREG)) {
+			memcpy(&p.stat, &s, sizeof(p.stat));
+		}
+		/* Ensure null termination */
+		*pathptr = 0;
 	}
-	/* Ensure null termination */
-	*pathptr = 0;
 
 	p.root = DOCUMENT_ROOT;
 	p.phys = path_phys;
@@ -595,8 +599,6 @@ static void uh_file_data(struct client *cl, struct path_info *pi, int fd)
 static void uh_file_request(struct client *cl, const char *url, struct path_info *pi, struct blob_attr **tb)
 {
 	int fd;
-
-	printf("Handling file request: %s\r\n", pi->phys);
 
 	if (!(pi->stat.st_mode & S_IROTH))
 		goto error;
