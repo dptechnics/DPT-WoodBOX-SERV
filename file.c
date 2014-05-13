@@ -237,7 +237,6 @@ static struct path_info *path_lookup(struct client *cl, const char *url)
 		return &p;
 	}
 
-	printf("Checking for index file\r\n");
 	/* Check if the folder contains an index file */
 	strcpy(pathptr, INDEX_FILE);
 	if (!stat(path_phys, &s) && (s.st_mode & S_IFREG)) {
@@ -596,6 +595,8 @@ static void uh_file_data(struct client *cl, struct path_info *pi, int fd)
 static void uh_file_request(struct client *cl, const char *url, struct path_info *pi, struct blob_attr **tb)
 {
 	int fd;
+
+	printf("Handle file request\r\n");
 
 	if (!(pi->stat.st_mode & S_IROTH))
 		goto error;
