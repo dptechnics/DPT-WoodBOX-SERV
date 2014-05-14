@@ -563,11 +563,11 @@ static bool client_header_handler(struct client *cl, char *buf, int len)
 	 * newline is not followed by another newline. Otherwise
 	 * buffer contains post data
 	 */
-	if(!strstr(newline + 2, "\r\n")){
+	if(!strstr(newline + 2, "\r\n") && strlen(newline + 4) > 0){
 		printf("Post data found: %s \r\n", newline + 2);
-	} else {
-		*newline = 0;
 	}
+
+	*newline = 0;
 
 	/* Parse the header */
 	client_parse_header(cl, buf);
