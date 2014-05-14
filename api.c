@@ -108,7 +108,7 @@ static json_object * put_request_handler(struct client *cl, char *url)
  */
 void api_handle_request(struct client *cl, char *url)
 {
-	json_object *response;
+	json_object *response = NULL;
 
 	/* Check which kind of request it is */
 	switch(cl->request.method){
