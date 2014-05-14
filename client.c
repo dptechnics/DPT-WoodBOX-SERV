@@ -359,6 +359,8 @@ static void client_parse_header(struct client *cl, char *data)
 	char *name;
 	char *val;
 
+	printf("Line 362, data: %s\r\n", data);
+
 	/* If there is no data wait for it */
 	if (!*data) {
 		uloop_timeout_cancel(&cl->timeout);
@@ -567,8 +569,6 @@ static bool client_header_handler(struct client *cl, char *buf, int len)
 	/* Consume the line in the stream */
 	line_len = newline + 2 - buf;
 	ustream_consume(cl->us, line_len);
-
-	printf("Checking for client data\r\n");
 
 	/* Parse client data if there is any */
 	if (cl->state == CLIENT_STATE_DATA){
