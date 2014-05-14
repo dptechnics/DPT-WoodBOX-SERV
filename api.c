@@ -11,6 +11,7 @@
 #include "api.h"
 #include "client.h"
 #include "config.h"
+#include "gethandlers.h"
 
 /**
  * Handle response write in chunks
