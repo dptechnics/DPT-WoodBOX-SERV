@@ -466,22 +466,20 @@ void client_post_data(struct client *cl)
 			break;
 
 		/* If there is data to be sent return */
-		//if (!d->data_send){
-			//return;
-		//}
+		if (!d->data_send){
+			return;
+		}
 
 		/* Get the current lenght of the buffer */
 		cur_len = min(r->content_length, len);
-		printf("Current length: %d\r\n", cur_len);
 		if (cur_len) {
 			/* Stop if the data is blocked */
-			//if (d->data_blocked)
-				//break;
+			if (d->data_blocked)
+				break;
 
-			//if (d->data_send) {
-				printf("Data send: %s\r\n", buf);
+			if (d->data_send) {
 				cur_len = d->data_send(cl, buf, cur_len);
-			//}
+			}
 
 			r->content_length -= cur_len;
 			ustream_consume(cl->us, cur_len);
