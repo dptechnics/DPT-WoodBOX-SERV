@@ -361,7 +361,6 @@ static void client_parse_header(struct client *cl, char *data)
 
 	/* Parse post data if there is any */
 	if (!*data) {
-		printf("Parse post data");
 		uloop_timeout_cancel(&cl->timeout);
 		cl->state = CLIENT_STATE_DATA;
 		client_header_complete(cl);
@@ -558,9 +557,10 @@ static bool client_header_handler(struct client *cl, char *buf, int len)
 
 	/* Get the first line of the data until a newline */
 	newline = strstr(buf, "\r\n");
-	if (!newline)
+	if (!newline){
+		printf("Returned no newline");
 		return false;
-
+	}
 	/* Nullterminate the string buffer on newline*/
 	*newline = 0;
 
