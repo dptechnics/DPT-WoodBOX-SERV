@@ -359,7 +359,7 @@ static void client_parse_header(struct client *cl, char *data)
 	char *name;
 	char *val;
 
-	printf("Line 362, data: %s\r\n", data);
+	printf("Line 362, data: %s newline \r\n", data);
 
 	/* If there is no data wait for it */
 	if (!*data) {
@@ -434,7 +434,7 @@ static void client_parse_header(struct client *cl, char *data)
 			r->ua = UH_UA_KONQUEROR;
 	}
 
-	/* Add the key value pair to hte header data */
+	/* Add the key value pair to hdr header data */
 	blobmsg_add_string(&cl->hdr, data, val);
 
 	/* Flag to state we are ready to parse the next header line */
