@@ -28,6 +28,7 @@ static void handle_chunk_write(struct client *cl)
 		strncpy(uh_buf, cl->response, r);
 
 		if (!r) {
+			free(cl->response);
 			request_done(cl);
 			return;
 		}
@@ -45,6 +46,7 @@ static void write_response(struct client *cl, int code, char *summary)
 
 	/* Stop if this is a header only request */
 	if (cl->request.method == UH_HTTP_MSG_HEAD) {
+		free(cl->response);
 		request_done(cl);
 		return;
 	}
@@ -68,6 +70,7 @@ static void write_response(struct client *cl, int code, char *summary)
 static void get_request_handler(struct client *cl, char *url)
 {
 	printf("Handling GET request: %s\r\n", url);
+	get_free_disk_space();
 }
 
 /**
@@ -115,9 +118,6 @@ void api_handle_request(struct client *cl, char *url)
 	default:
 		break;
 	}
-
-	/* Test reponse */
-	cl->response = "{\"data\": \"test\"}";
 
 	/* Write the response */
 	write_response(cl, 200, "OK");
