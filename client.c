@@ -555,6 +555,8 @@ static bool client_header_handler(struct client *cl, char *buf, int len)
 	char *newline;
 	int line_len;
 
+	printf("Line 558, buffer: %s", buf);
+
 	/* Get the first line of the data until a newline */
 	newline = strstr(buf, "\r\n");
 	if (!newline)
