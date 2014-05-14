@@ -450,11 +450,8 @@ void client_post_data(struct client *cl)
 	char *buf;
 	int len;
 
-	printf("Client post data entered\r\n");
-
 	/* If there is no data to handle return */
 	if (cl->state == CLIENT_STATE_DONE) {
-		printf("Returned for CLIENT_STATE_DONE\r\n");
 		return;
 	}
 
@@ -465,15 +462,13 @@ void client_post_data(struct client *cl)
 
 		/* Get the data buffer */
 		buf = ustream_get_read_buf(cl->us, &len);
-		printf("Get buffer from ustream: %s\r\n", buf);
 		if (!buf || !len)
 			break;
 
 		/* If there is data to be sent return */
-		if (!d->data_send){
-			printf("Return for d->data_send\r\n");
-			return;
-		}
+		//if (!d->data_send){
+			//return;
+		//}
 
 		/* Get the current lenght of the buffer */
 		cur_len = min(r->content_length, len);
