@@ -32,6 +32,7 @@ void get_free_disk_space(struct client *cl)
 	json_object_object_add(jobj, "total", totalspace);
 
 
-
-	cl->response = json_object_to_json_string(jobj);
+	const char* test = json_object_to_json_string(jobj);
+	cl->response = (char*) malloc((strlen(test)+1)*sizeof(char));
+	strcpy(cl->response, test);
 }
