@@ -71,7 +71,7 @@ static void write_response(struct client *cl, int code, char *summary)
 static void get_request_handler(struct client *cl, char *url)
 {
 	printf("Handling GET request: %s\r\n", url);
-	get_free_disk_space();
+	get_free_disk_space(cl);
 }
 
 /**
