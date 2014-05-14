@@ -21,7 +21,7 @@
  * could be found.
  * @cl the client who made the request
  */
-void get_free_disk_space(struct client *cl)
+json_object* get_free_disk_space(struct client *cl)
 {
 	/* Create test json object */
 	json_object *jobj = json_object_new_object();
@@ -31,8 +31,5 @@ void get_free_disk_space(struct client *cl)
 	json_object_object_add(jobj, "used", usedspace);
 	json_object_object_add(jobj, "total", totalspace);
 
-
-	const char* test = json_object_to_json_string(jobj);
-	cl->response = (char*) malloc((strlen(test)+1)*sizeof(char));
-	strcpy(cl->response, test);
+	return jobj;
 }

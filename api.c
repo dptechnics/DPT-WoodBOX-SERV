@@ -5,6 +5,7 @@
 #include <dirent.h>
 
 #include <libubox/blobmsg.h>
+#include <json/json.h>
 
 #include "uhttpd.h"
 #include "mimetypes.h"
@@ -68,10 +69,10 @@ static void write_response(struct client *cl, int code, char *summary)
  * @url the request URL
  * @pi info concerning the path
  */
-static void get_request_handler(struct client *cl, char *url)
+static json_object * get_request_handler(struct client *cl, char *url)
 {
 	printf("Handling GET request: %s\r\n", url);
-	get_free_disk_space(cl);
+	return get_free_disk_space(cl);
 }
 
 /**
@@ -80,9 +81,10 @@ static void get_request_handler(struct client *cl, char *url)
  * @url the request URL
  * @pi info concerning the path
  */
-static void post_request_handler(struct client *cl, char *url)
+static json_object * post_request_handler(struct client *cl, char *url)
 {
 	printf("Handling POST request: %s\r\n", cl->postdata);
+	return NULL;
 }
 
 /**
@@ -91,9 +93,10 @@ static void post_request_handler(struct client *cl, char *url)
  * @url the request URL
  * @pi info concerning the path
  */
-static void put_request_handler(struct client *cl, char *url)
+static json_object * put_request_handler(struct client *cl, char *url)
 {
 	printf("Handling PUT request\r\n");
+	return NULL;
 }
 
 
@@ -105,19 +108,28 @@ static void put_request_handler(struct client *cl, char *url)
  */
 void api_handle_request(struct client *cl, char *url)
 {
+	json_object *response;
+
 	/* Check which kind of request it is */
 	switch(cl->request.method){
 	case UH_HTTP_MSG_GET:
-		get_request_handler(cl, url);
+		response = get_request_handler(cl, url);
 		break;
 	case UH_HTTP_MSG_POST:
-		post_request_handler(cl, url);
+		response = post_request_handler(cl, url);
 		break;
 	case UH_HTTP_MSG_PUT:
-		put_request_handler(cl, url);
+		response = put_request_handler(cl, url);
 		break;
 	default:
 		break;
+	}
+
+	/* Write response when there is one */
+	if(response){
+		const char* stringResponse = json_object_to_json_string(response);
+		cl->response = (char*) malloc((strlen(stringResponse)+1)*sizeof(char));
+		strcpy(cl->response, stringResponse);
 	}
 
 	/* Write the response */
