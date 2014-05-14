@@ -32,7 +32,8 @@ IF(HAVE_SHADOW)
 ENDIF()
 
 ADD_EXECUTABLE(woodbox-server ${SOURCES})
-TARGET_LINK_LIBRARIES(woodbox-server ubox dl ${LIBS})
+FIND_LIBRARY(libjson NAMES json-c json)
+TARGET_LINK_LIBRARIES(woodbox-server ubox dl ${libjson} ${LIBS})
 
 SET(PLUGINS "")
 
