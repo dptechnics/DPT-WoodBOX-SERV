@@ -559,6 +559,8 @@ static bool client_header_handler(struct client *cl, char *buf, int len)
 		return false;
 	}
 
+	printf("Buffer: %s", buf);
+
 	/* Nullterminate the string buffer on newline when
 	 * newline is not followed by another newline. Otherwise
 	 * buffer contains post data
