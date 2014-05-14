@@ -568,9 +568,13 @@ static bool client_header_handler(struct client *cl, char *buf, int len)
 	line_len = newline + 2 - buf;
 	ustream_consume(cl->us, line_len);
 
+	printf("Checking for client data\r\n");
+
 	/* Parse client data if there is any */
-	if (cl->state == CLIENT_STATE_DATA)
+	if (cl->state == CLIENT_STATE_DATA){
+		printf("Client data handler \r\n");
 		return client_data_handler(cl, newline + 2, len - line_len);
+	}
 
 	return true;
 }
