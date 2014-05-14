@@ -225,6 +225,8 @@ struct client {
 	struct dispatch dispatch;
 	char *response;
 	int readidx;
+	bool ispostdata;
+	char *postdata;
 };
 
 extern char uh_buf[4096];

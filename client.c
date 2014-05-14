@@ -559,14 +559,15 @@ static bool client_header_handler(struct client *cl, char *buf, int len)
 		return false;
 	}
 
-	printf("Buffer: %s", buf);
-
 	/* Nullterminate the string buffer on newline when
 	 * newline is not followed by another newline. Otherwise
 	 * buffer contains post data
 	 */
 	if(!strstr(newline + 2, "\r\n")){
-		printf("Post data: %s \r\n", newline + 2);
+		// Save the found post data
+		cl->ispostdata = true;
+		cl->postdata = (char*) realloc(cl->postdata, (strlen(newline+2)+1)*sizeof(char));
+		strcpy(cl->postdata, newline + 2);
 	}
 
 	*newline = 0;
@@ -637,6 +638,8 @@ static void client_close(struct client *cl)
 	}
 
 	/* Free all resources */
+	if(cl->ispostdata)
+		free(cl->postdata);
 	client_done = true;
 	n_clients--;
 	dispatch_done(cl);
@@ -648,6 +651,8 @@ static void client_close(struct client *cl)
 	list_del(&cl->list);
 	blob_buf_free(&cl->hdr);
 	free(cl);
+
+
 
 	/* Unblock other listeners so pending clients can be handled */
 	unblock_listeners();
