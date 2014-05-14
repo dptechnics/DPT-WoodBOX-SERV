@@ -553,16 +553,17 @@ static bool client_header_handler(struct client *cl, char *buf, int len)
 	char *newline;
 	int line_len;
 
-	printf("Line 558, buffer: %s", buf);
+	printf("Line 558, buffer: %s\r\n", buf);
 
 	/* Get the first line of the data until a newline */
 	newline = strstr(buf, "\r\n");
 	if (!newline){
-		printf("Returned no newline");
 		return false;
 	}
 	/* Nullterminate the string buffer on newline*/
 	*newline = 0;
+
+	printf("Line 566, buffer na terminatie: %s", buf);
 
 	/* Parse the header */
 	client_parse_header(cl, buf);
