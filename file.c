@@ -624,9 +624,7 @@ static void uh_file_request(struct client *cl, const char *url, struct path_info
 	}
 
 error:
-	send_client_error(cl, 403, "Forbidden",
-			"You don't have permission to access %s on this server.",
-			url);
+	send_client_error(cl, 403, "Forbidden", "You don't have permission to access %s on this server.", url);
 }
 
 static bool handle_file_request(struct client *cl, char *url)
