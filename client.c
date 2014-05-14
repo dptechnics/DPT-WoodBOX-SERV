@@ -563,8 +563,8 @@ static bool client_header_handler(struct client *cl, char *buf, int len)
 	 * newline is not followed by another newline. Otherwise
 	 * buffer contains post data
 	 */
-	if(!strstr(newline + 2, "\r\n") && strlen(newline + 4) > 0){
-		printf("Post data found: %s \r\n", newline + 2);
+	if(!strstr(newline + 2, "\r\n")){
+		printf("Post data: %s \r\n", newline + 2);
 	}
 
 	*newline = 0;
@@ -578,7 +578,6 @@ static bool client_header_handler(struct client *cl, char *buf, int len)
 
 	/* Parse client data if there is any */
 	if (cl->state == CLIENT_STATE_DATA){
-		printf("Client data handler \r\n");
 		return client_data_handler(cl, newline + 2, len - line_len);
 	}
 
