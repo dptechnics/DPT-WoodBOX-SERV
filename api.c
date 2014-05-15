@@ -129,10 +129,6 @@ void api_handle_request(struct client *cl, char *url)
 	if(response){
 		/* Get the string representation of the JSON object */
 		const char* stringResponse = json_object_to_json_string(response);
-
-		/* Free the JSON object */
-		json_object_put(response);
-
 		/* Copy the response to the response buffer */
 		cl->response = (char*) malloc((strlen(stringResponse)+1)*sizeof(char));
 		strcpy(cl->response, stringResponse);
