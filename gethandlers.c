@@ -15,6 +15,7 @@
 
 #include "uhttpd.h"
 #include "gethandlers.h"
+#include "api.h"
 
 /**
  * Get free disk space if a mounted filesystem
@@ -31,5 +32,7 @@ json_object* get_free_disk_space(struct client *cl)
 	json_object_object_add(jobj, "used", usedspace);
 	json_object_object_add(jobj, "total", totalspace);
 
+	/* Return status ok */
+	cl->http_status = r_ok;
 	return jobj;
 }

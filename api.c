@@ -139,5 +139,5 @@ void api_handle_request(struct client *cl, char *url)
 	}
 
 	/* Write the response */
-	write_response(cl, 200, "OK");
+	write_response(cl, cl->http_status.code, cl->http_status.message);
 }

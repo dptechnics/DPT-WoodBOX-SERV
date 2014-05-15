@@ -35,6 +35,7 @@
 #endif
 
 #include "utils.h"
+#include "api.h"
 
 #define UH_LIMIT_CLIENTS	64
 
@@ -225,6 +226,7 @@ struct client {
 	struct blob_buf hdr;
 	struct dispatch dispatch;
 	char *response;
+	struct http_response http_status;
 	int readidx;
 	bool ispostdata;
 	char *postdata;
