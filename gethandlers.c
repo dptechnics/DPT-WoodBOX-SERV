@@ -15,7 +15,6 @@
 
 #include "uhttpd.h"
 #include "gethandlers.h"
-#include "api.h"
 
 /**
  * Get free disk space if a mounted filesystem

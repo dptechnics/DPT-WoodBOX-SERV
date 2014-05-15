@@ -35,7 +35,6 @@
 #endif
 
 #include "utils.h"
-#include "api.h"
 
 #define UH_LIMIT_CLIENTS	64
 
@@ -202,6 +201,18 @@ struct dispatch {
 		struct dispatch_ubus ubus;
 #endif
 	};
+};
+
+/* HTTP response */
+struct http_response {
+	int code;
+	const char* message;
+};
+
+/* Return code ok */
+const struct http_response r_ok = {
+		200,
+		"OK"
 };
 
 struct client {
