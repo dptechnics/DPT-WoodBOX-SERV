@@ -29,12 +29,12 @@ json_object* get_free_disk_space(struct client *cl)
 	struct statfs s;
 	statfs("/overlay", &s);
 
-	/* Create test json object */
+	/* Put data in JSON object */
 	json_object *jobj = json_object_new_object();
-	json_object *usedspace = json_object_new_int((int)((s.f_bavail * s.f_frsize)/1024));
-	json_object *totalspace = json_object_new_int((int)((s.f_blocks * s.f_frsize)/1024));
+	json_object *freespace = json_object_new_int((int)((s.f_bavail * s.f_frsize)/1048576));
+	json_object *totalspace = json_object_new_int((int)((s.f_blocks * s.f_frsize)/1048576));
 
-	json_object_object_add(jobj, "used", usedspace);
+	json_object_object_add(jobj, "free", freespace);
 	json_object_object_add(jobj, "total", totalspace);
 
 	/* Return status ok */
