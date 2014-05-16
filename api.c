@@ -39,7 +39,7 @@ static void handle_chunk_write(struct client *cl)
 	}
 }
 
-static void write_response(struct client *cl, int code, char *summary)
+static void write_response(struct client *cl, int code, const char *summary)
 {
 	/* Write response */
 	write_http_header(cl, code, summary);
