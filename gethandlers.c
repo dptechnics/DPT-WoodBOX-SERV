@@ -11,6 +11,8 @@
  * Created on: May 14, 2014
  */
 
+#include <mntent.h>
+#include <sys/vfs.h>
 #include <json/json.h>
 
 #include "uhttpd.h"
@@ -23,10 +25,14 @@
  */
 json_object* get_free_disk_space(struct client *cl)
 {
+	/* The mount point we want to check */
+	struct statfs s;
+	statfs("/overlay", &s);
+
 	/* Create test json object */
 	json_object *jobj = json_object_new_object();
-	json_object *usedspace = json_object_new_int(10);
-	json_object *totalspace = json_object_new_int(100);
+	json_object *usedspace = json_object_new_int((int)((s.f_bavail * s.f_frsize)/1024));
+	json_object *totalspace = json_object_new_int((int)((s.f_blocks * s.f_frsize)/1024));
 
 	json_object_object_add(jobj, "used", usedspace);
 	json_object_object_add(jobj, "total", totalspace);
