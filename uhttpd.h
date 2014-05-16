@@ -209,11 +209,7 @@ struct http_response {
 	const char* message;
 };
 
-/* Return code ok */
-const struct http_response r_ok = {
-		200,
-		"OK"
-};
+extern const struct http_response r_ok;
 
 struct client {
 	struct list_head list;

@@ -14,6 +14,12 @@
 #include "config.h"
 #include "gethandlers.h"
 
+/* Return code ok */
+const struct http_response r_ok = {
+		200,
+		"OK"
+};
+
 /**
  * Handle response write in chunks
  * cl the client containing the response
