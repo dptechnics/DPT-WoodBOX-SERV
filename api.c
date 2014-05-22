@@ -77,8 +77,31 @@ static void write_response(struct client *cl, int code, const char *summary)
  */
 static json_object * get_request_handler(struct client *cl, char *url)
 {
-	printf("Handling GET request: %s\r\n", url);
-	return get_free_disk_space(cl);
+	/* The methode result */
+	json_object * result;
+
+	/* Get the request from the url as /<request>/*data */
+	char *firstslash = strchr(url+1, '/');
+	size_t len = 0;
+
+	if(firstslash){
+		len = firstslash - url;
+	} else {
+		len = strlen(url);
+	}
+
+	char *request = (char*) malloc(len*sizeof(char));
+	request = memccpy(request, url+1, len*sizeof(char));
+	request[len] = 0;
+
+	printf("Request: %s\r\n", request);
+
+	/* Store the result */
+	result = get_free_disk_space(cl);
+
+	/* Free request resource */
+	free(request);
+	return result;
 }
 
 /**
@@ -89,7 +112,6 @@ static json_object * get_request_handler(struct client *cl, char *url)
  */
 static json_object * post_request_handler(struct client *cl, char *url)
 {
-	printf("Handling POST request: %s\r\n", cl->postdata);
 	return NULL;
 }
 
@@ -101,7 +123,6 @@ static json_object * post_request_handler(struct client *cl, char *url)
  */
 static json_object * put_request_handler(struct client *cl, char *url)
 {
-	printf("Handling PUT request\r\n");
 	return NULL;
 }
 
@@ -114,6 +135,7 @@ static json_object * put_request_handler(struct client *cl, char *url)
  */
 void api_handle_request(struct client *cl, char *url)
 {
+	/* Make space for json object */
 	json_object *response = NULL;
 
 	/* Check which kind of request it is */
