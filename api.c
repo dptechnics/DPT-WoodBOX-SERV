@@ -80,7 +80,7 @@ static json_object * get_request_handler(struct client *cl, char *url)
 	/* The methode result */
 	json_object * result;
 
-	/* Get the request from the url as /<request>/*data */
+	/* Get the request from the url as /<request>/ data */
 	char *firstslash = strchr(url+1, '/');
 	size_t len = 0;
 
