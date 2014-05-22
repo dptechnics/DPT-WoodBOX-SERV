@@ -91,7 +91,7 @@ static json_object * get_request_handler(struct client *cl, char *url)
 	}
 
 	char *request = (char*) malloc(len*sizeof(char));
-	request = memccpy(request, url+1, len*sizeof(char));
+	request = memcpy(request, url+1, len*sizeof(char));
 	request[len] = 0;
 
 	printf("Request: %s\r\n", request);
