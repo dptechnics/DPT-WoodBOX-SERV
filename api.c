@@ -80,8 +80,8 @@ static json_object * get_request_handler(struct client *cl, char *url)
 	/* The methode result */
 	json_object * result;
 
-	/* Get the request from the url as /<request>/ data */
-	char *firstslash = strchr(url+1, '/');
+	/* Get the request from the url as api/<request>/ data */
+	char *firstslash = strchr(url+5, '/');
 	size_t len = 0;
 
 	if(firstslash){
@@ -91,7 +91,7 @@ static json_object * get_request_handler(struct client *cl, char *url)
 	}
 
 	char *request = (char*) malloc(len*sizeof(char));
-	request = memcpy(request, url+1, len*sizeof(char));
+	request = memcpy(request, url+5, len*sizeof(char));
 	request[len] = 0;
 
 	printf("Request: %s\r\n", request);
