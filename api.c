@@ -77,22 +77,21 @@ static void write_response(struct client *cl, int code, const char *summary)
  */
 static json_object * get_request_handler(struct client *cl, char *url)
 {
-	/* The methode result */
-	json_object * result;
+	json_object * result;	/* The method result */
+	char *request;			/* the GET request method */
 
-	/* Get the request from the url as api/<request>/ data */
-	char *firstslash = strchr(url+5, '/');
-	size_t len = 0;
-
+	/* Filter the request out of the url */
+	char *firstslash = strchr(url + API_STR_LEN, '/');
 	if(firstslash){
-		len = firstslash - url;
+		/* Get the length of the request when there is a slash after the data */
+		size_t len = firstslash - url - API_STR_LEN;
+		request = (char*) malloc(len*sizeof(char));
+		memcpy(request, url+5, len*sizeof(char));
+		request[len] = 0;
 	} else {
-		len = strlen(url);
+		/* Request is the same as url without API prefix */
+		request = url + API_STR_LEN;
 	}
-
-	char *request = (char*) malloc(len*sizeof(char));
-	request = memcpy(request, url+5, len*sizeof(char));
-	request[len] = 0;
 
 	printf("Request: %s\r\n", request);
 
@@ -100,7 +99,9 @@ static json_object * get_request_handler(struct client *cl, char *url)
 	result = get_free_disk_space(cl);
 
 	/* Free request resource */
-	free(request);
+	if(firstslash) {
+		free(request);
+	}
 	return result;
 }
 
