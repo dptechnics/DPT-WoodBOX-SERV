@@ -21,6 +21,14 @@ const struct http_response r_ok = {
 };
 
 /**
+ * The get handlers table
+ */
+const struct f_table get_handlers = {
+	1,
+	{ "", get_free_disk_space }
+};
+
+/**
  * Handle response write in chunks
  * cl the client containing the response
  */
