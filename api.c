@@ -75,10 +75,51 @@ static void write_response(struct client *cl, int code, const char *summary)
  * @url the request URL
  * @pi info concerning the path
  */
-static json_object * get_request_handler(struct client *cl, char *url)
+static json_object * get_request_handler(struct client *cl, char *url, char *request)
 {
 	json_object * result;	/* The method result */
-	char *request;			/* the GET request method */
+
+
+	/* Store the result */
+	result = get_free_disk_space(cl);
+
+
+	return result;
+}
+
+/**
+ * Handle POST requests.
+ * @cl the client who sent the request
+ * @url the request URL
+ * @pi info concerning the path
+ */
+static json_object * post_request_handler(struct client *cl, char *url, char *request)
+{
+	return NULL;
+}
+
+/**
+ * Handle PUT requests.
+ * @cl the client who sent the request
+ * @url the request URL
+ * @pi info concerning the path
+ */
+static json_object * put_request_handler(struct client *cl, char *url, char *request)
+{
+	return NULL;
+}
+
+
+/**
+ * Handle api requests
+ * @cl the client who sent the request
+ * @url the request URL
+ * @pi info concerning the path
+ */
+void api_handle_request(struct client *cl, char *url)
+{
+	json_object *response = NULL; 	/* The response */
+	char *request;					/* the GET request method */
 
 	/* Filter the request out of the url */
 	char *firstslash = strchr(url + API_STR_LEN, '/');
@@ -93,62 +134,16 @@ static json_object * get_request_handler(struct client *cl, char *url)
 		request = url + API_STR_LEN;
 	}
 
-	printf("Request: %s\r\n", request);
-
-	/* Store the result */
-	result = get_free_disk_space(cl);
-
-	/* Free request resource */
-	if(firstslash) {
-		free(request);
-	}
-	return result;
-}
-
-/**
- * Handle POST requests.
- * @cl the client who sent the request
- * @url the request URL
- * @pi info concerning the path
- */
-static json_object * post_request_handler(struct client *cl, char *url)
-{
-	return NULL;
-}
-
-/**
- * Handle PUT requests.
- * @cl the client who sent the request
- * @url the request URL
- * @pi info concerning the path
- */
-static json_object * put_request_handler(struct client *cl, char *url)
-{
-	return NULL;
-}
-
-
-/**
- * Handle api requests
- * @cl the client who sent the request
- * @url the request URL
- * @pi info concerning the path
- */
-void api_handle_request(struct client *cl, char *url)
-{
-	/* Make space for json object */
-	json_object *response = NULL;
-
-	/* Check which kind of request it is */
+	/* Check which kind of HTTP method it is and delegate*/
 	switch(cl->request.method){
 	case UH_HTTP_MSG_GET:
-		response = get_request_handler(cl, url);
+		response = get_request_handler(cl, url, request);
 		break;
 	case UH_HTTP_MSG_POST:
-		response = post_request_handler(cl, url);
+		response = post_request_handler(cl, url, request);
 		break;
 	case UH_HTTP_MSG_PUT:
-		response = put_request_handler(cl, url);
+		response = put_request_handler(cl, url, request);
 		break;
 	default:
 		break;
@@ -165,6 +160,11 @@ void api_handle_request(struct client *cl, char *url)
 
 		/* Free the JSON object */
 		json_object_put(response);
+	}
+
+	/* Free request resource if new space was allocated */
+	if(firstslash) {
+		free(request);
 	}
 
 	/* Write the response */
