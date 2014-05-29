@@ -168,6 +168,8 @@ void api_handle_request(struct client *cl, char *url)
 
 		/* Free the JSON object */
 		json_object_put(response);
+	}else{
+		//TODO: handle bad request
 	}
 
 	/* Free request resource if new space was allocated */
@@ -187,5 +189,5 @@ void api_handle_request(struct client *cl, char *url)
  */
 void* api_get_function(char* name, const struct f_entry* table, size_t table_size)
 {
-	return NULL;
+	return &get_free_disk_space;
 }
