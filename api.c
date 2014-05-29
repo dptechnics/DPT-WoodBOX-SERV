@@ -82,7 +82,7 @@ static void write_response(struct client *cl, int code, const char *summary)
 static json_object * get_request_handler(struct client *cl, char *url, char *request)
 {
 	/* The handler */
-	void (*handler)(json_object*) = NULL;
+	json_object* (*handler)(struct client *) = NULL;
 
 	/* Search get handler */
 	handler = api_get_function(request, get_handlers, sizeof(get_handlers)/sizeof(struct f_entry));
