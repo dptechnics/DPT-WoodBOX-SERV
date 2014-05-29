@@ -22,6 +22,6 @@
 #define DOCUMENT_ROOT			"/www"			/* The document root */
 #define API_PATH				"/api"			/* The API uri */
 #define API_STR_LEN				5				/* The number of characters used for api in the url */
-#define API_CALL_MAX_LEN		12				/* The maximum length of an API call
+#define API_CALL_MAX_LEN		12				/* The maximum length of an API call */
 
 #endif
