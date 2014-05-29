@@ -105,8 +105,8 @@ bool load_configuration(void)
 	conf.cgi_docroot_path = "/www/api";
 	conf.cgi_path = "/sbin:/usr/sbin:/bin:/usr/bin";
 
-	/* Bind a non TLS socket to port 80 */
-	if(!bind_listener_sockets(NULL, "80", false)) {
+	/* Bind a non TLS socket to port */
+	if(!bind_listener_sockets(NULL, LISTEN_PORT, false)) {
 		fprintf(stderr, "[ERROR] Could not bind socket to 0.0.0.0:80\n");
 		return false;
 	}

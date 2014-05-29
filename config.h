@@ -23,5 +23,6 @@
 #define API_PATH				"/api"			/* The API uri */
 #define API_STR_LEN				5				/* The number of characters used for api in the url */
 #define API_CALL_MAX_LEN		12				/* The maximum length of an API call */
+#define LISTEN_PORT				"8080"			/* Port to listen to for incoming requests */
 
 #endif
