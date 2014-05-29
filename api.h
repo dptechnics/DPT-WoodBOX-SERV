@@ -27,6 +27,6 @@ void api_handle_request(struct client *cl, char *url);
  * @table the function lookup table, must be in lexical order
  * @table_size the size of the table
  */
-void* api_get_function(char* name, struct f_entry* table, size_t table_size);
+void* api_get_function(char* name, const struct f_entry* table, size_t table_size);
 
 #endif
