@@ -15,17 +15,13 @@
 #include "gethandlers.h"
 
 /* Return code ok */
-const struct http_response r_ok = {
-		200,
-		"OK"
-};
+const struct http_response r_ok = { 200, "OK" };
 
 /**
  * The get handlers table
  */
-const struct f_table get_handlers = {
-	1,
-	{ "", get_free_disk_space }
+const struct f_entry get_handlers[1] = {
+		{"freespace",  get_free_disk_space }
 };
 
 /**
@@ -85,14 +81,18 @@ static void write_response(struct client *cl, int code, const char *summary)
  */
 static json_object * get_request_handler(struct client *cl, char *url, char *request)
 {
-	json_object * result;	/* The method result */
+	/* The handler */
+	void (*handler)(json_object*) = NULL;
 
+	/* Search get handler */
+	handler = api_get_function(request, get_handlers, sizeof(get_handlers)/sizeof(struct f_entry));
 
-	/* Store the result */
-	result = get_free_disk_space(cl);
+	/* If a handler is found execute it */
+	if(handler){
+		return handler(cl);
+	}
 
-
-	return result;
+	return NULL;
 }
 
 /**
@@ -177,4 +177,15 @@ void api_handle_request(struct client *cl, char *url)
 
 	/* Write the response */
 	write_response(cl, cl->http_status.code, cl->http_status.message);
+}
+
+/**
+ * Get a function pointer from the name
+ * @name the function name
+ * @table the function lookup table, must be in lexical order
+ * @table_size the size of the table
+ */
+void* api_get_function(char* name, struct f_entry* table, size_t table_size)
+{
+	return NULL;
 }
