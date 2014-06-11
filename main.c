@@ -98,8 +98,6 @@ int main(int argc, char **argv)
 bool load_configuration(void)
 {
 	/* Set up configuration */
-	conf.script_timeout = 60;
-	conf.max_script_requests = 3;
 	conf.max_connections = 100;
 	conf.realm = "WoodBox Secured";
 	conf.cgi_docroot_path = "/www/api";
