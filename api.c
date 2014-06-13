@@ -185,5 +185,6 @@ void api_handle_request(struct client *cl, char *url)
  */
 void* api_get_function(char* name, const struct f_entry* table, size_t table_size)
 {
+	printf("%s\r\n", "Getting function");
 	return &get_free_disk_space;
 }
