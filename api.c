@@ -144,18 +144,16 @@ void api_handle_request(struct client *cl, char *url)
 			fflush(stdout);
 
 	/* Search the correct handler */
-	if(cl->request.method){
-		json_object* (*handler)(struct client *) = NULL;
+	json_object* (*handler)(struct client *) = NULL;
 
-		printf("test\r\n");
-		fflush(stdout);
-		/* Search get handler */
-		handler = api_get_function(request, handlers[cl->request.method], sizeof(handlers[cl->request.method])/sizeof(struct f_entry));
+	printf("test\r\n");
+	fflush(stdout);
+	/* Search get handler */
+	handler = api_get_function(request, handlers[cl->request.method], sizeof(handlers[cl->request.method])/sizeof(struct f_entry));
 
-		/* If a handler is found execute it */
-		if(handler){
-			response = handler(cl);
-		}
+	/* If a handler is found execute it */
+	if(handler){
+		response = handler(cl);
 	}
 
 	/* Write response when there is one */
