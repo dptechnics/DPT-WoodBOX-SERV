@@ -47,7 +47,7 @@ json_object* get_free_disk_space(struct client *cl)
  */
 json_object* test(struct client *cl)
 {
-	json_object *jobj = json_object_new_objec();
+	json_object *jobj = json_object_new_object();
 	json_object *teststring = json_object_new_string("testing");
 	json_object_object_add(jobj, "test", teststring);
 
