@@ -144,6 +144,7 @@ void api_handle_request(struct client *cl, char *url)
 	if(cl->request.method){
 		json_object* (*handler)(struct client *) = NULL;
 
+		printf("test\r\n");
 		/* Search get handler */
 		handler = api_get_function(request, handlers[cl->request.method], sizeof(handlers[cl->request.method])/sizeof(struct f_entry));
 
