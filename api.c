@@ -142,7 +142,6 @@ void api_handle_request(struct client *cl, char *url)
 	printf("%s\r\n", "Searching for handler");
 
 	/* Search the correct handler */
-	if(cl->request.method){
 		json_object* (*handler)(struct client *) = NULL;
 
 		/* Search get handler */
@@ -152,7 +151,7 @@ void api_handle_request(struct client *cl, char *url)
 		if(handler){
 			response = handler(cl);
 		}
-	}
+
 
 	/* Write response when there is one */
 	if(response){
@@ -187,5 +186,5 @@ void api_handle_request(struct client *cl, char *url)
 void* api_get_function(char* name, const struct f_entry* table, size_t table_size)
 {
 	printf("%s\r\n", "Getting function");
-	return &get_free_disk_space;
+	return &test;
 }
