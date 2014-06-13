@@ -20,9 +20,8 @@ const struct http_response r_ok = { 200, "OK" };
 /**
  * The get handlers table
  */
-const struct f_entry get_handlers[2] = {
-		{"freespace",  get_free_disk_space },
-		{"test", test }
+const struct f_entry get_handlers[1] = {
+		{"freespace",  get_free_disk_space }
 };
 
 /**
