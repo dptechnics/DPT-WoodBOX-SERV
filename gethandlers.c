@@ -41,3 +41,16 @@ json_object* get_free_disk_space(struct client *cl)
 	cl->http_status = r_ok;
 	return jobj;
 }
+
+/**
+ * Test object
+ */
+json_object* test(struct client *cl)
+{
+	json_object *jobj = json_object_new_objec();
+	json_object_object_add(jobj, "test", json_object_new_string("testing"));
+
+	/* Return status ok */
+	cl->http_status = r_ok;
+	return jobj;
+}

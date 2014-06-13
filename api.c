@@ -20,9 +20,34 @@ const struct http_response r_ok = { 200, "OK" };
 /**
  * The get handlers table
  */
-const struct f_entry get_handlers[1] = {
-		{"freespace",  get_free_disk_space }
+const struct f_entry get_handlers[2] = {
+		{"freespace",  get_free_disk_space },
+		{"test", test }
 };
+
+/**
+ * The post handlers table
+ */
+const struct f_entry post_handlers[2] = {
+		{"freespace",  get_free_disk_space },
+		{"test", test }
+};
+
+/**
+ * The put handlers table
+ */
+const struct f_entry put_handlers[2] = {
+		{"freespace",  get_free_disk_space },
+		{"test", test }
+};
+
+/* Lookup table for method handle lookup */
+const struct f_entry* handlers[3] = {
+		[UH_HTTP_MSG_GET] = get_handlers,
+		[UH_HTTP_MSG_POST] = post_handlers,
+		[UH_HTTP_MSG_PUT] = put_handlers
+};
+
 
 /**
  * Handle response write in chunks
@@ -74,51 +99,6 @@ static void write_response(struct client *cl, int code, const char *summary)
 }
 
 /**
- * Handle GET requests.
- * @cl the client who sent the request
- * @url the request URL
- * @pi info concerning the path
- */
-static json_object * get_request_handler(struct client *cl, char *url, char *request)
-{
-	/* The handler */
-	json_object* (*handler)(struct client *) = NULL;
-
-	/* Search get handler */
-	handler = api_get_function(request, get_handlers, sizeof(get_handlers)/sizeof(struct f_entry));
-
-	/* If a handler is found execute it */
-	if(handler){
-		return handler(cl);
-	}
-
-	return NULL;
-}
-
-/**
- * Handle POST requests.
- * @cl the client who sent the request
- * @url the request URL
- * @pi info concerning the path
- */
-static json_object * post_request_handler(struct client *cl, char *url, char *request)
-{
-	return NULL;
-}
-
-/**
- * Handle PUT requests.
- * @cl the client who sent the request
- * @url the request URL
- * @pi info concerning the path
- */
-static json_object * put_request_handler(struct client *cl, char *url, char *request)
-{
-	return NULL;
-}
-
-
-/**
  * Handle api requests
  * @cl the client who sent the request
  * @url the request URL
@@ -126,8 +106,8 @@ static json_object * put_request_handler(struct client *cl, char *url, char *req
  */
 void api_handle_request(struct client *cl, char *url)
 {
-	json_object *response = NULL; 	/* The response */
-	char *request;					/* the GET request method */
+	json_object *response = NULL; 		/* The response */
+	char *request;						/* The request method */
 
 	/* Filter the request out of the url */
 	char *firstslash = strchr(url + API_STR_LEN, '/');
@@ -142,19 +122,35 @@ void api_handle_request(struct client *cl, char *url)
 		request = url + API_STR_LEN;
 	}
 
-	/* Check which kind of HTTP method it is and delegate*/
+	/* Check which kind of HTTP method it is and delegate */
+	/*
 	switch(cl->request.method){
 	case UH_HTTP_MSG_GET:
-		response = get_request_handler(cl, url, request);
+		handlers = get_handlers;
 		break;
 	case UH_HTTP_MSG_POST:
-		response = post_request_handler(cl, url, request);
+		handlers = post_handlers;
 		break;
 	case UH_HTTP_MSG_PUT:
-		response = put_request_handler(cl, url, request);
+		handlers = put_handlers;
 		break;
 	default:
+		handlers = NULL;
 		break;
+	}
+	 */
+
+	/* Search the correct handler */
+	if(cl->request.method){
+		json_object* (*handler)(struct client *) = NULL;
+
+		/* Search get handler */
+		handler = api_get_function(request, handlers[cl->request.method], sizeof(handlers[cl->request.method])/sizeof(struct f_entry));
+
+		/* If a handler is found execute it */
+		if(handler){
+			response = handler(cl);
+		}
 	}
 
 	/* Write response when there is one */
