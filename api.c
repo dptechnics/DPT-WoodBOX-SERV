@@ -140,6 +140,8 @@ void api_handle_request(struct client *cl, char *url)
 	}
 	 */
 
+	printf("%s\r\n", "Searching for handler");
+
 	/* Search the correct handler */
 	if(cl->request.method){
 		json_object* (*handler)(struct client *) = NULL;
