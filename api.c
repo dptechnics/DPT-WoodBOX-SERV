@@ -22,7 +22,8 @@ const struct http_response r_ok = { 200, "OK" };
  */
 const struct f_entry get_handlers[2] = {
 		{"freespace",  get_free_disk_space },
-		{"test", test }
+		{"test", test },
+		{"testing", testing}
 };
 
 /**
@@ -122,32 +123,9 @@ void api_handle_request(struct client *cl, char *url)
 		request = url + API_STR_LEN;
 	}
 
-	/* Check which kind of HTTP method it is and delegate */
-	/*
-	switch(cl->request.method){
-	case UH_HTTP_MSG_GET:
-		handlers = get_handlers;
-		break;
-	case UH_HTTP_MSG_POST:
-		handlers = post_handlers;
-		break;
-	case UH_HTTP_MSG_PUT:
-		handlers = put_handlers;
-		break;
-	default:
-		handlers = NULL;
-		break;
-	}
-	 */
-
-	printf("beforesearch\r\n");
-			fflush(stdout);
-
 	/* Search the correct handler */
 	json_object* (*handler)(struct client *) = NULL;
 
-	printf("test\r\n");
-	fflush(stdout);
 	/* Search get handler */
 	handler = api_get_function(request, handlers[cl->request.method], sizeof(handlers[cl->request.method])/sizeof(struct f_entry));
 
@@ -188,5 +166,6 @@ void api_handle_request(struct client *cl, char *url)
  */
 void* api_get_function(char* name, const struct f_entry* table, size_t table_size)
 {
+
 	return &test;
 }

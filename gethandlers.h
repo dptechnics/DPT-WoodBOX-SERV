@@ -29,4 +29,9 @@ json_object* get_free_disk_space(struct client *cl);
  */
 json_object* test(struct client *cl);
 
+/**
+ * Test object
+ */
+json_object* testing(struct client *cl);
+
 #endif
