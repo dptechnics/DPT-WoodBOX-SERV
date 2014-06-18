@@ -149,7 +149,11 @@ void api_handle_request(struct client *cl, char *url)
 	}else{
 		/* Handle bad request */
 		cl->http_status = r_bad_req;
-		cl->response = "Request not supported by server.";
+		const char* stringResponse = "Request not supported by server.";
+
+		/* Copy the response to the response buffer */
+		cl->response = (char*) malloc((strlen(stringResponse)+1)*sizeof(char));
+		strcpy(cl->response, stringResponse);
 	}
 
 	/* Free request resource if new space was allocated */
