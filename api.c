@@ -117,7 +117,7 @@ void api_handle_request(struct client *cl, char *url)
 		/* Get the length of the request when there is a slash after the data */
 		size_t len = firstslash - url - API_STR_LEN;
 		request = (char*) malloc(len*sizeof(char));
-		memcpy(request, url+5, len*sizeof(char));
+		memcpy(request, url + API_STR_LEN, len*sizeof(char));
 		request[len] = 0;
 	} else {
 		/* Request is the same as url without API prefix */
