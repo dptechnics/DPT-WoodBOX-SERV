@@ -128,7 +128,9 @@ void api_handle_request(struct client *cl, char *url)
 	json_object* (*handler)(struct client *) = NULL;
 
 	/* Search get handler */
+	printf("Request method = %d\r\n", cl->request.method);
 	handler = api_get_function(request, handlers[cl->request.method], sizeof(handlers[cl->request.method])/sizeof(struct f_entry));
+	printf("Size: %d\r\n", sizeof(handlers[cl->request.method]));
 
 	/* If a handler is found execute it */
 	if(handler){
@@ -173,8 +175,6 @@ void api_handle_request(struct client *cl, char *url)
  */
 void* api_get_function(char* name, const struct f_entry* table, size_t table_size)
 {
-	printf("Request: %s\r\n", name);
-	fflush(stdout);
 	printf("Table size: %d\r\n", table_size);
 	fflush(stdout);
 	//TODO: optimize to binary search
@@ -184,5 +184,7 @@ void* api_get_function(char* name, const struct f_entry* table, size_t table_siz
 			return table[i].function;
 		}
 	}
+
+	/* Return NULL when no request could be found */
 	return NULL;
 }
