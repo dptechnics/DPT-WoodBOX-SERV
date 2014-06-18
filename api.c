@@ -129,7 +129,7 @@ void api_handle_request(struct client *cl, char *url)
 
 	/* Search get handler */
 	handler = api_get_function(request, get_handlers, sizeof(get_handlers)/sizeof(struct f_entry));
-	printf("Size: %d\r\n", sizeof(handlers[cl->request.method]));
+	printf("Size: %d\r\n", sizeof(handlers[(int) cl->request.method]));
 	printf("Size: %d\r\n", sizeof(get_handlers));
 
 	/* If a handler is found execute it */
@@ -175,11 +175,8 @@ void api_handle_request(struct client *cl, char *url)
  */
 void* api_get_function(char* name, const struct f_entry* table, size_t table_size)
 {
-	printf("Table size: %d\r\n", table_size);
-	fflush(stdout);
 	//TODO: optimize to binary search
 	for(int i = 0; i < table_size; ++i) {
-		printf("Searching index %d/%d, key=%s, stack=%s\r\n", i, 3, name, table[i].name);
 		if(strcmp(name, table[i].name) == 0){
 			return table[i].function;
 		}
