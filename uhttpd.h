@@ -75,10 +75,10 @@ struct auth_realm {
 };
 
 enum http_method {
-	UH_HTTP_MSG_GET = 0,
-	UH_HTTP_MSG_POST = 1,
-	UH_HTTP_MSG_HEAD = 2,
-	UH_HTTP_MSG_PUT = 3,
+	UH_HTTP_MSG_GET,
+	UH_HTTP_MSG_POST,
+	UH_HTTP_MSG_HEAD,
+	UH_HTTP_MSG_PUT,
 };
 
 enum http_version {
