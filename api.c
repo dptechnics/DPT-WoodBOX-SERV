@@ -129,7 +129,8 @@ void api_handle_request(struct client *cl, char *url)
 
 	/* Search get handler */
 	handler = api_get_function(request, get_handlers, sizeof(get_handlers)/sizeof(struct f_entry));
-	printf("Size: %d\r\n", sizeof(*handlers[cl->request.method]));
+	printf("Size: %d\r\n", sizeof(handlers[cl->request.method]));
+	printf("Size: %d\r\n", sizeof(handlers[0]));
 	printf("Size: %d\r\n", sizeof(get_handlers));
 
 	/* If a handler is found execute it */
