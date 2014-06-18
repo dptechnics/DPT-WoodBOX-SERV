@@ -45,9 +45,9 @@ const struct f_entry put_handlers[2] = {
 
 /* Lookup table for method handle lookup */
 const struct f_entry* handlers[] = {
-		[UH_HTTP_MSG_GET] = get_handlers,
-		[UH_HTTP_MSG_POST] = post_handlers,
-		[UH_HTTP_MSG_PUT] = put_handlers
+		get_handlers,
+		post_handlers,
+		put_handlers
 };
 
 
@@ -128,7 +128,6 @@ void api_handle_request(struct client *cl, char *url)
 	json_object* (*handler)(struct client *) = NULL;
 
 	/* Search get handler */
-	printf("Request method = %d\r\n", cl->request.method);
 	handler = api_get_function(request, handlers[cl->request.method], sizeof(handlers[cl->request.method])/sizeof(struct f_entry));
 	printf("Size: %d\r\n", sizeof(handlers[cl->request.method]));
 
