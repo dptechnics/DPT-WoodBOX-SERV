@@ -45,9 +45,9 @@ const struct f_entry put_handlers[2] = {
 
 /* Lookup table for method handle lookup */
 const struct f_entry* handlers[] = {
-		[UH_HTTP_MSG_GET] = get_handlers,
-		[UH_HTTP_MSG_POST] = post_handlers,
-		[UH_HTTP_MSG_PUT] = put_handlers
+		[UH_HTTP_MSG_GET] = &get_handlers,
+		[UH_HTTP_MSG_POST] = &post_handlers,
+		[UH_HTTP_MSG_PUT] = &put_handlers
 };
 
 
