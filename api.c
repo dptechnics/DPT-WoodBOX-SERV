@@ -126,12 +126,20 @@ void api_handle_request(struct client *cl, char *url)
 
 	/* Search the correct handler */
 	json_object* (*handler)(struct client *) = NULL;
-
-	/* Search get handler */
-	handler = api_get_function(request, get_handlers, sizeof(get_handlers)/sizeof(struct f_entry));
-	printf("Size: %d\r\n", sizeof(handlers[cl->request.method]));
-	printf("Size: %d\r\n", sizeof(handlers[UH_HTTP_MSG_GET]));
-	printf("Size: %d\r\n", sizeof(get_handlers));
+	switch(cl->request.method) {
+		case UH_HTTP_MSG_GET:
+			handler = api_get_function(request, get_handlers, sizeof(get_handlers)/sizeof(struct f_entry));
+			break;
+		case UH_HTTP_MSG_POST:
+			handler = api_get_function(request, post_handlers, sizeof(post_handlers)/sizeof(struct f_entry));
+			break;
+		case UH_HTTP_MSG_PUT:
+			handler = api_get_function(request, put_handlers, sizeof(put_handlers)/sizeof(struct f_entry));
+			break;
+		default:
+			handler = NULL;
+			break;
+	}
 
 	/* If a handler is found execute it */
 	if(handler){
