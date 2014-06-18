@@ -166,6 +166,10 @@ void api_handle_request(struct client *cl, char *url)
  */
 void* api_get_function(char* name, const struct f_entry* table, size_t table_size)
 {
+	printf("Request: %s\r\n", name);
+	fflush(stdout);
+	printf("Table size: %d\r\n", table_size);
+	fflush(stdout);
 	//TODO: optimize to binary search
 	for(int i = 0; i < table_size; ++i) {
 		printf("Searching index %d/%d, key=%s, stack=%s\r\n", i, 3, name, "test");
