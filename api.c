@@ -180,6 +180,9 @@ void* api_get_function(char* name, const struct f_entry* table, size_t table_siz
 	//TODO: optimize to binary search
 	for(int i = 0; i < table_size; ++i) {
 		printf("Searching index %d/%d, key=%s, stack=%s\r\n", i, 3, name, table[i].name);
+		if(strcmp(name, table[i].name) == 0){
+			return table[i].function;
+		}
 	}
 
 	/* Return NULL when no request could be found */
