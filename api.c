@@ -16,6 +16,7 @@
 
 /* Return code ok */
 const struct http_response r_ok = { 200, "OK" };
+const struct http_response r_bad_req = { 400, "Bad request" };
 
 /**
  * The get handlers table
@@ -146,7 +147,9 @@ void api_handle_request(struct client *cl, char *url)
 		/* Free the JSON object */
 		json_object_put(response);
 	}else{
-		//TODO: handle bad request
+		/* Handle bad request */
+		cl->http_status = r_bad_req;
+		cl->response = "Request not supported by server.";
 	}
 
 	/* Free request resource if new space was allocated */
